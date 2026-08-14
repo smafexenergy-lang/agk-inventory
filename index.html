@@ -151,7 +151,7 @@
   .doc-qr{text-align:center; margin:16px 0 8px;}
   .doc-footer{text-align:center; font-size:11px; color:var(--muted); margin-top:10px;}
   @media print{
-    @page{ size:auto; margin:10mm; }
+    @page{ size:80mm auto; margin:4mm; }
     html, body{ height:auto !important; margin:0 !important; padding:0 !important; }
     body > *:not(#printOverlay){ display:none !important; }
     #printOverlay{
@@ -159,11 +159,16 @@
     }
     #printOverlay > div{
       background:#fff !important; box-shadow:none !important; border-radius:0 !important;
-      max-width:100% !important; width:100% !important; max-height:none !important; overflow:visible !important;
+      max-width:80mm !important; width:80mm !important; max-height:none !important; overflow:visible !important; margin:0 auto !important;
     }
-    #printArea{ padding:0 !important; }
+    #printArea{ padding:2mm 1mm !important; }
     #btnDoPrint, #btnClosePrint{ display:none !important; }
-    .doc-table{ font-size:11px; }
+    .doc-table{ font-size:10px; }
+    .doc-header h3{ font-size:14px; }
+    .doc-header .doc-sub{ font-size:10px; }
+    .doc-header .doc-contact{ font-size:9px; }
+    .doc-meta{ font-size:10px; }
+    .doc-footer{ font-size:9px; }
     .doc-header .doc-logo{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 </style>
@@ -248,6 +253,25 @@
           <tbody id="cartBody"></tbody>
           <tfoot><tr class="cart-total-row"><td colspan="4">Cart total</td><td class="num" id="cartTotal">0</td><td></td></tr></tfoot>
         </table>
+        <div class="row" style="margin-top:12px;">
+          <div>
+            <label>Payment method</label>
+            <select id="paymentMethod">
+              <option value="Cash">Cash</option>
+              <option value="Mobile Money">Mobile Money</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Card">Card</option>
+            </select>
+          </div>
+          <div id="cashFieldsWrap">
+            <label>Amount received (MWK)</label>
+            <input type="number" id="amountReceived" min="0" placeholder="e.g. 5000">
+          </div>
+          <div>
+            <label>Change due</label>
+            <div id="changeDueDisplay" style="padding:9px 10px; font-weight:700; color:var(--navy);">0</div>
+          </div>
+        </div>
         <div class="toolbar" style="margin-top:14px; margin-bottom:0;">
           <button class="btn btn-save" id="btnSaveSale">Save sale</button>
           <button class="btn btn-ghost" id="btnClearCart">Clear cart</button>
@@ -2969,6 +2993,7 @@ function renderCart(){
     return s + (p?p.price:0)*item.qty;
   },0);
   document.getElementById('cartTotal').textContent = fmtMWK(total);
+  if(typeof updateChangeDue === 'function') updateChangeDue();
 }
 
 function renderQuoteCart(){
@@ -3179,15 +3204,23 @@ function qrSvg(text, sizePx){
   return svg;
 }
 
-function openPrintOverlay(html){
+const ORIGINAL_DOC_TITLE = document.title;
+
+function openPrintOverlay(html, docTitleForPrint){
   document.getElementById('printArea').innerHTML = html;
   document.getElementById('printOverlay').style.display = 'flex';
+  document.getElementById('printOverlay').dataset.printTitle = docTitleForPrint || 'Heritage Traders Receipt';
 }
 function closePrintOverlay(){
   document.getElementById('printOverlay').style.display = 'none';
+  document.title = ORIGINAL_DOC_TITLE;
 }
 document.getElementById('btnClosePrint').addEventListener('click', closePrintOverlay);
-document.getElementById('btnDoPrint').addEventListener('click', ()=> window.print());
+document.getElementById('btnDoPrint').addEventListener('click', ()=>{
+  document.title = document.getElementById('printOverlay').dataset.printTitle || 'Heritage Traders Receipt';
+  window.print();
+});
+window.addEventListener('afterprint', ()=>{ document.title = ORIGINAL_DOC_TITLE; });
 document.getElementById('printOverlay').addEventListener('click', (e)=>{
   if(e.target.id === 'printOverlay') closePrintOverlay();
 });
@@ -3214,7 +3247,11 @@ function openReceipt(txnId){
   if(lines.length===0){ showToast('Transaction not found'); return; }
   const date = lines[0].date;
   const total = lines.reduce((s,l)=>s+l.total,0);
-  const qrPayload = `AGK Inventory Receipt | ${txnId} | ${fmtDateTime(date)} | Total: ${fmtMWK(total)} MWK`;
+  const itemCount = lines.reduce((s,l)=>s+l.qty,0);
+  const paymentMethod = lines[0].paymentMethod || 'Cash';
+  const amountReceived = lines[0].amountReceived;
+  const changeDue = lines[0].changeDue;
+  const qrPayload = `Heritage Traders Receipt | ${txnId} | ${fmtDateTime(date)} | Total: ${fmtMWK(total)} MWK`;
 
   const rowsHtml = lines.map(l=>`
     <tr>
@@ -3224,10 +3261,18 @@ function openReceipt(txnId){
       <td class="num">${fmtMWK(l.total)}</td>
     </tr>`).join('');
 
+  const paymentLines = `
+    <div class="doc-meta"><span>Payment: ${paymentMethod}</span><span>${itemCount} item${itemCount!==1?'s':''}</span></div>
+    ${paymentMethod === 'Cash' && amountReceived ? `
+    <div class="doc-meta"><span>Received: ${fmtMWK(amountReceived)}</span><span>Change: ${fmtMWK(changeDue||0)}</span></div>` : ''}
+  `;
+
   const html = `
     ${docHeaderHtml('Sales Receipt')}
     <div class="doc-meta">
-      <span>Receipt: <b>${txnId}</b></span>
+      <span>Receipt No: <b>${txnId}</b></span>
+    </div>
+    <div class="doc-meta">
       <span>${fmtDateTime(date)}</span>
     </div>
     <table class="doc-table">
@@ -3235,10 +3280,11 @@ function openReceipt(txnId){
       <tbody>${rowsHtml}</tbody>
       <tfoot><tr class="doc-total-row"><td colspan="3">TOTAL (MWK)</td><td class="num">${fmtMWK(total)}</td></tr></tfoot>
     </table>
-    <div class="doc-qr">${qrSvg(qrPayload, 110)}</div>
+    ${paymentLines}
+    <div class="doc-qr">${qrSvg(qrPayload, 100)}</div>
     <div class="doc-footer">Thank you for shopping with Heritage Traders</div>
   `;
-  openPrintOverlay(html);
+  openPrintOverlay(html, `Receipt ${txnId}`);
 }
 
 async function voidTransaction(txnId){
@@ -3550,7 +3596,7 @@ document.getElementById('btnGenerateQuote').addEventListener('click', async ()=>
 window.openQuotePrint = function(quoteId){
   const q = quotations.find(x=>x.id===quoteId);
   if(!q){ showToast('Quotation not found'); return; }
-  const qrPayload = `AGK Inventory Quotation | ${q.quoteNo} | Total: ${fmtMWK(q.total)} MWK`;
+  const qrPayload = `Heritage Traders Quotation | ${q.quoteNo} | Total: ${fmtMWK(q.total)} MWK`;
   const rowsHtml = q.lines.map(l=>`
     <tr>
       <td>${l.name}</td>
@@ -3574,10 +3620,10 @@ window.openQuotePrint = function(quoteId){
       <tbody>${rowsHtml}</tbody>
       <tfoot><tr class="doc-total-row"><td colspan="3">TOTAL (MWK)</td><td class="num">${fmtMWK(q.total)}</td></tr></tfoot>
     </table>
-    <div class="doc-qr">${qrSvg(qrPayload, 110)}</div>
+    <div class="doc-qr">${qrSvg(qrPayload, 100)}</div>
     <div class="doc-footer">This quotation is an estimate and does not reserve stock until converted to a sale.</div>
   `;
-  openPrintOverlay(html);
+  openPrintOverlay(html, `Quotation ${q.quoteNo}`);
 };
 
 window.convertQuoteToSale = function(quoteId){
@@ -3604,22 +3650,53 @@ window.deleteQuote = async function(quoteId){
   showToast('Quotation deleted');
 };
 
+document.getElementById('paymentMethod').addEventListener('change', updateCashFieldsVisibility);
+function updateCashFieldsVisibility(){
+  const method = document.getElementById('paymentMethod').value;
+  document.getElementById('cashFieldsWrap').style.display = (method === 'Cash') ? 'block' : 'none';
+  if(method !== 'Cash'){
+    document.getElementById('amountReceived').value = '';
+    document.getElementById('changeDueDisplay').textContent = '0';
+  }
+}
+document.getElementById('amountReceived').addEventListener('input', updateChangeDue);
+function updateChangeDue(){
+  const total = cart.reduce((s,item)=>{
+    const p = products.find(x=>x.code===item.code);
+    return s + (p?p.price:0)*item.qty;
+  },0);
+  const received = parseFloat(document.getElementById('amountReceived').value) || 0;
+  const change = Math.max(0, received - total);
+  document.getElementById('changeDueDisplay').textContent = fmtMWK(change);
+}
+
 document.getElementById('btnSaveSale').addEventListener('click', async ()=>{
   if(cart.length===0){ showToast("Cart is empty"); return; }
   const now = new Date();
   const dateNow = now.toISOString();
   const txnId = "TXN-" + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') +
                 "-" + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0');
+  const paymentMethod = document.getElementById('paymentMethod').value;
+  const cartTotal = cart.reduce((s,item)=>{
+    const p = products.find(x=>x.code===item.code);
+    return s + (p?p.price:0)*item.qty;
+  },0);
+  const amountReceived = paymentMethod === 'Cash' ? (parseFloat(document.getElementById('amountReceived').value) || cartTotal) : cartTotal;
+  const changeDue = paymentMethod === 'Cash' ? Math.max(0, amountReceived - cartTotal) : 0;
   cart.forEach(item=>{
     const p = products.find(x=>x.code===item.code);
     if(!p) return;
     const total = p.price * item.qty;
-    sales.push({ id:"S"+Date.now()+Math.floor(Math.random()*1000), txnId, code:p.code, name:p.name, qty:item.qty, price:p.price, total, date:dateNow });
+    sales.push({ id:"S"+Date.now()+Math.floor(Math.random()*1000), txnId, code:p.code, name:p.name, qty:item.qty, price:p.price, total, date:dateNow, paymentMethod, amountReceived, changeDue });
     p.stock = Math.max(0, p.stock - item.qty);
   });
   await saveProducts();
   await saveSales();
   cart = [];
+  document.getElementById('amountReceived').value = '';
+  document.getElementById('changeDueDisplay').textContent = '0';
+  document.getElementById('paymentMethod').value = 'Cash';
+  updateCashFieldsVisibility();
   renderAll();
   showToast("Sale saved. Stock updated");
   openReceipt(txnId);
@@ -3923,6 +4000,7 @@ window.addEventListener('appinstalled', () => {
 (async function init(){
   document.getElementById('dateBadge').textContent = todayStr();
   populateCategorySelects();
+  updateCashFieldsVisibility();
   await loadData();
   renderAll();
 

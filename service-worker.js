@@ -1,4 +1,4 @@
-const CACHE_NAME = 'agk-inventory-v8';
+const CACHE_NAME = 'agk-inventory-v9';
 const ASSETS = [
   './',
   './index.html',

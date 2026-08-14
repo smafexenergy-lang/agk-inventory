@@ -36,6 +36,32 @@ OPTION 3: Company/local network hosting
   just upload this folder there and open the URL from any device on
   that network, same install steps as Option 1.
 
+RECEIPT SIZE & BRANDING
+Receipts and quotations now print at a compact 80mm width (the
+standard thermal receipt roll size), not A4 — a proper narrow slip
+rather than a mostly-empty full sheet. If you print on regular paper
+instead of a thermal roll, it will appear as a narrow strip centered
+on the page, which is normal and expected.
+
+Each printout shows Heritage Traders (HT) with the logo, contact
+details, and: a receipt number, date and time, itemized lines, total,
+item count, payment method, amount received and change due (for cash
+sales), and a QR code. The app also temporarily renames the browser
+tab/print title to match the receipt or quotation number while
+printing, so nothing referencing "AGK Inventory" appears in your
+browser's print header or in a saved PDF's filename.
+
+If your browser still shows its own header/footer (date, URL, page
+number) at the very edges when printing, that's a browser setting,
+not something in the app: open the print dialog's "More settings" and
+uncheck "Headers and footers" to remove it.
+
+PAYMENT METHOD & CHANGE DUE
+At checkout, choose a payment method (Cash, Mobile Money, Bank
+Transfer, or Card). For Cash, enter the amount received and the
+change due calculates and displays live, then prints on the receipt
+automatically.
+
 LAYOUT CHANGES
 The full Product Database (add/edit/delete every product) is now
 tucked behind a "📦 Manage products" button near the bottom of the
