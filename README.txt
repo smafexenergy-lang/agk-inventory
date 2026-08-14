@@ -1,0 +1,78 @@
+AGK INVENTORY: POS & INVENTORY (Installable Web App)
+==============================================================
+
+WHAT THIS IS
+This is a Progressive Web App (PWA). Once hosted, it can be "installed"
+on a PC or phone like a real app: its own icon, its own window, works
+offline, no browser address bar.
+
+IMPORTANT: THIS WON'T INSTALL IF YOU JUST DOUBLE-CLICK index.html
+Browsers block the "Install" feature and offline caching on files opened
+directly from disk (file://). The app needs to be served over http:// or
+https://, even a local server counts. Three easy ways to do that:
+
+OPTION 1: Free permanent hosting (recommended)
+  1. Create a free account at https://pages.github.com or https://app.netlify.com
+  2. Drag this whole folder onto the Netlify "Deploy" drop zone
+     (or push it to a GitHub repo and enable GitHub Pages).
+  3. Open the resulting https:// link on your PC or phone.
+  4. PC (Chrome/Edge): click the install icon in the address bar, or the
+     "Install App" button inside the tool.
+     Phone: browser menu → "Add to Home Screen" / "Install App".
+
+OPTION 2: Run it locally on your own PC (no internet needed after setup)
+  1. Install Python (most PCs already have it) or Node.js.
+  2. Open a terminal/command prompt in this folder.
+  3. Run:  python -m http.server 8080
+           (or, with Node:  npx serve .)
+  4. Open http://localhost:8080 in Chrome or Edge.
+  5. Click "Install App" (or the install icon in the address bar).
+  6. From then on, launch it like any installed app. The local server
+     only needs to be running the first time you install it; after
+     installation the app works offline.
+
+OPTION 3: Company/local network hosting
+  If you have a shared PC, small server, or hosting account already,
+  just upload this folder there and open the URL from any device on
+  that network, same install steps as Option 1.
+
+MANAGER PASSCODE (team protection)
+Click "⚙ Manager Settings" in the top bar to set a passcode. Once set,
+deleting a product or voiding a sale will ask for that passcode before
+completing. This stops team members from undoing sales or removing
+products without approval, while everyone can still search, sell, and
+add new products freely.
+  - The passcode is a simple shared deterrent, not encryption. Anyone
+    with the passcode (or direct access to the stored data) can bypass
+    it, so treat it like a shop-floor PIN, not a bank password.
+  - It syncs via Google Drive along with your product/sales data, so
+    it's the same passcode across every device you connect.
+  - To change or remove it later, click Manager Settings again and
+    enter the current passcode first.
+
+DATA & BACKUPS
+Product and sales data is stored locally in the browser/app on each
+device. It does NOT sync between devices, UNLESS you connect Google
+Drive (see below). Use the "Export products (CSV)" and "Export sales
+log (CSV)" buttons any time for a plain backup, and to move data
+between devices if needed.
+
+GOOGLE DRIVE SYNC
+Click "Connect Google Drive" in the top bar and sign in with the same
+Google account you used to set up the project in Google Cloud Console
+(it must be added as a test user there). Once connected:
+  - Your data is saved to a file called heritage-investments-data.json
+    in your Drive automatically, a couple of seconds after any change.
+  - Opening the app on another device and connecting the same Google
+    account pulls that data back down.
+  - You stay signed in only for that browser session. Connect again
+    next time you open the app (this is expected with a Testing-mode
+    Google Cloud project).
+Note: this data lives in your own Drive, not visible to anyone else
+unless you share the file yourself.
+
+FILES IN THIS FOLDER
+  index.html         The app itself
+  manifest.json       Tells the browser how to install it (name, icon, colors)
+  service-worker.js   Makes it work offline once installed
+  icon-192.png / icon-512.png   App icons

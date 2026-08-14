@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGK Inventory: POS &amp; Inventory</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#16324F">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+  :root{
+    --bg:#EEF1F6;
+    --card:#FFFFFF;
+    --navy:#16324F;
+    --navy-2:#1F3A5F;
+    --teal:#2E86AB;
+    --teal-light:#E7F1F6;
+    --ink:#1B2430;
+    --muted:#66707E;
+    --line:#E3E7EE;
+    --green:#1E8E5A;
+    --green-bg:#E4F6ED;
+    --amber:#B9791C;
+    --amber-bg:#FCF0DA;
+    --red:#C0392B;
+    --red-bg:#FBE6E3;
+    --radius:10px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .topbar{
+    background:linear-gradient(135deg,var(--navy) 0%, var(--navy-2) 100%);
+    color:#fff; padding:18px 28px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .topbar .brand{display:flex; align-items:center; gap:14px;}
+  .topbar .logo{
+    width:44px; height:44px; border-radius:11px; flex-shrink:0;
+    background:linear-gradient(135deg,var(--teal) 0%, #7FC8E8 100%);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 3px 8px rgba(0,0,0,.25);
+  }
+  .topbar h1{margin:0; font-size:20px; font-weight:700; letter-spacing:.2px;}
+  .topbar .sub{font-size:12px; color:#B9C7D8; margin-top:2px;}
+  .topbar .badge{
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+    padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600;
+  }
+  .wrap{max-width:1400px; margin:0 auto; padding:20px 24px 60px;}
+  .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:18px;}
+  @media(max-width:980px){.grid{grid-template-columns:1fr;}}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px; margin-bottom:18px;
+  }
+  .card h2{
+    font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--navy-2);
+    margin:0 0 14px 0; font-weight:700; display:flex; align-items:center; gap:8px;
+  }
+  .card h2::before{content:""; width:4px; height:14px; background:var(--teal); border-radius:2px; display:inline-block;}
+  label{font-size:12px; font-weight:600; color:var(--muted); display:block; margin-bottom:5px;}
+  input[type=text], input[type=number], select{
+    width:100%; padding:9px 10px; border:1.5px solid var(--line); border-radius:8px;
+    font-size:14px; background:#fff; color:var(--ink);
+  }
+  input:focus, select:focus{outline:2px solid var(--teal); outline-offset:1px; border-color:var(--teal);}
+  .row{display:flex; gap:10px; align-items:flex-end;}
+  .row > div{flex:1;}
+  .btn{
+    border:none; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:700;
+    cursor:pointer; transition:filter .1s ease, transform .05s ease; white-space:nowrap;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+  .btn-primary{background:var(--teal); color:#fff;}
+  .btn-primary:hover:not(:disabled){filter:brightness(1.08);}
+  .btn-save{background:var(--green); color:#fff;}
+  .btn-save:hover:not(:disabled){filter:brightness(1.08);}
+  .btn-danger{background:var(--red); color:#fff;}
+  .btn-danger:hover:not(:disabled){filter:brightness(1.08);}
+  .btn-ghost{background:#EEF1F6; color:var(--navy-2); border:1px solid var(--line);}
+  .btn-ghost:hover:not(:disabled){background:#E3E8F0;}
+  .btn-sm{padding:5px 10px; font-size:12px; border-radius:6px;}
+  .lookup-result{
+    margin-top:12px; padding:12px; background:var(--teal-light); border-radius:8px;
+    display:none;
+  }
+  .lookup-result.show{display:block;}
+  .lookup-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 16px;}
+  .lookup-grid .k{font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase;}
+  .lookup-grid .v{font-size:16px; font-weight:700; color:var(--navy);}
+  .status-pill{
+    display:inline-block; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:700;
+  }
+  .status-OK{background:var(--green-bg); color:var(--green);}
+  .status-LOW{background:var(--amber-bg); color:var(--amber);}
+  .status-OUT{background:var(--red-bg); color:var(--red);}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.4px;
+    color:var(--muted); padding:8px 8px; border-bottom:2px solid var(--line);
+  }
+  td{padding:8px 8px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .num{text-align:right; font-variant-numeric:tabular-nums;}
+  .center{text-align:center;}
+  .empty-row td{text-align:center; color:var(--muted); padding:22px 8px; font-size:13px;}
+  .cart-total-row td{font-weight:800; font-size:15px; color:var(--navy); border-top:2px solid var(--navy-2);}
+  .mini-input{width:60px; padding:5px 6px; font-size:13px; border-radius:6px; border:1.5px solid var(--line);}
+  .mini-input.price{width:90px;}
+  .toolbar{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+  .search-box{flex:1; min-width:180px;}
+  .chart-wrap{display:flex; align-items:center; gap:18px;}
+  canvas{flex-shrink:0;}
+  .legend{font-size:12px; flex:1;}
+  .legend-item{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .legend-dot{width:10px; height:10px; border-radius:3px; flex-shrink:0;}
+  .legend-label{flex:1; color:var(--ink);}
+  .legend-val{font-weight:700; color:var(--navy);}
+  .kpi-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px;}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px;}
+  .kpi .label{font-size:11px; text-transform:uppercase; color:var(--muted); font-weight:700; letter-spacing:.4px;}
+  .kpi .value{font-size:22px; font-weight:800; color:var(--navy); margin-top:4px;}
+  .rank-badge{
+    width:22px; height:22px; border-radius:50%; background:var(--navy-2); color:#fff;
+    display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800;
+  }
+  .code-tag{font-family:"SF Mono",Consolas,monospace; font-size:12px; color:var(--teal); font-weight:700;}
+  .footer-note{text-align:center; color:var(--muted); font-size:11px; margin-top:10px;}
+  .add-product-row input{margin-bottom:0;}
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--navy); color:#fff; padding:11px 20px; border-radius:8px; font-size:13px; font-weight:600;
+    opacity:0; pointer-events:none; transition:all .25s ease; z-index:999; box-shadow:0 8px 24px rgba(0,0,0,.2);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 2 L23 9 H3 Z" fill="#FFFFFF"/>
+        <rect x="6" y="12" width="3.4" height="9" rx="0.6" fill="#FFFFFF" fill-opacity="0.55"/>
+        <rect x="11.3" y="9" width="3.4" height="12" rx="0.6" fill="#FFFFFF" fill-opacity="0.78"/>
+        <rect x="16.6" y="6" width="3.4" height="15" rx="0.6" fill="#FFFFFF"/>
+      </svg>
+    </div>
+    <div>
+      <h1>AGK Inventory</h1>
+      <div class="sub">Search, sell, and track stock in real time</div>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <button class="btn btn-ghost" id="btnManagerSettings" onclick="openManagerSettings()">⚙ Manager Settings</button>
+    <span id="driveStatus" style="font-size:11px; color:#B9C7D8;"></span>
+    <button class="btn btn-primary" id="btnDriveSignIn">🔗 Connect Google Drive</button>
+    <button class="btn btn-primary" id="btnInstall" style="display:none;">⬇ Install App</button>
+    <div class="badge" id="dateBadge"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="label">Products low / out of stock</div><div class="value" id="kpiLow">0</div></div>
+    <div class="kpi"><div class="label">Total stock value (MWK)</div><div class="value" id="kpiStockValue">0</div></div>
+    <div class="kpi"><div class="label">Revenue to date (MWK)</div><div class="value" id="kpiRevenue">0</div></div>
+    <div class="kpi"><div class="label">Today's revenue (MWK)</div><div class="value" id="kpiRevenueToday">0</div></div>
+    <div class="kpi"><div class="label">Transactions today</div><div class="value" id="kpiTxnToday">0</div></div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div>
+      <div class="card">
+        <h2>Search product</h2>
+        <div class="row">
+          <div>
+            <label>Product code</label>
+            <input type="text" id="searchCode" list="codeList" placeholder="e.g. P001" autocomplete="off">
+            <datalist id="codeList"></datalist>
+          </div>
+          <div>
+            <label>Qty</label>
+            <input type="number" id="searchQty" min="1" value="1" class="mini-input" style="width:100%;">
+          </div>
+          <button class="btn btn-primary" id="btnAddCart">Add to cart</button>
+        </div>
+        <div class="lookup-result" id="lookupResult">
+          <div class="lookup-grid">
+            <div><div class="k">Product</div><div class="v" id="lkName">-</div></div>
+            <div><div class="k">Price</div><div class="v" id="lkPrice">-</div></div>
+            <div><div class="k">Category</div><div class="v" id="lkCat" style="font-size:13px;">-</div></div>
+            <div><div class="k">Stock</div><div class="v" id="lkStock">-</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Cart</h2>
+        <table>
+          <thead><tr><th>Code</th><th>Product</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th><th></th></tr></thead>
+          <tbody id="cartBody"></tbody>
+          <tfoot><tr class="cart-total-row"><td colspan="4">Cart total</td><td class="num" id="cartTotal">0</td><td></td></tr></tfoot>
+        </table>
+        <div class="toolbar" style="margin-top:14px; margin-bottom:0;">
+          <button class="btn btn-save" id="btnSaveSale">Save sale</button>
+          <button class="btn btn-ghost" id="btnClearCart">Clear cart</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recent transactions <span id="lastTxnAgo" style="font-size:11px; font-weight:400; color:#66707E; margin-left:8px;"></span></h2>
+        <div class="toolbar" style="margin-bottom:12px;">
+          <div>
+            <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">From</label>
+            <input type="date" id="txnFrom" style="padding:7px 9px; border:1px solid var(--line); border-radius:8px;">
+          </div>
+          <div>
+            <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">To</label>
+            <input type="date" id="txnTo" style="padding:7px 9px; border:1px solid var(--line); border-radius:8px;">
+          </div>
+          <div style="flex:1; min-width:160px;">
+            <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">Product or transaction ID</label>
+            <input type="text" id="txnSearch" placeholder="e.g. Sugar or TXN-2026..." style="width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:8px;">
+          </div>
+          <button class="btn btn-ghost" id="btnTxnToday" style="align-self:flex-end;">Today</button>
+          <button class="btn btn-ghost" id="btnTxnClear" style="align-self:flex-end;">Clear filter</button>
+        </div>
+        <table>
+          <thead><tr><th>Date &amp; time</th><th>Transaction</th><th>Items</th><th class="num">Total</th><th></th></tr></thead>
+          <tbody id="txnBody"></tbody>
+        </table>
+        <div id="txnEmpty" style="display:none; color:#66707E; font-size:13px; padding:10px 2px;">No sales recorded yet. Completed sales will appear here.</div>
+      </div>
+
+      <div class="card">
+        <h2>Top 5 best sellers</h2>
+        <table>
+          <thead><tr><th></th><th>Code</th><th>Product</th><th class="num">Qty sold</th><th class="num">Revenue</th></tr></thead>
+          <tbody id="topSellersBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <div class="card">
+        <h2>Revenue by category</h2>
+        <div class="chart-wrap">
+          <canvas id="chartCategory" width="150" height="150"></canvas>
+          <div class="legend" id="legendCategory"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Stock status</h2>
+        <div class="chart-wrap">
+          <canvas id="chartStatus" width="150" height="150"></canvas>
+          <div class="legend" id="legendStatus"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Product database</h2>
+    <div class="toolbar">
+      <input type="text" id="productSearch" class="search-box" placeholder="Filter by code, name or category...">
+      <select id="categoryFilter" style="max-width:220px;"><option value="">All categories</option></select>
+      <button class="btn btn-ghost" id="btnExportProducts">⬇ Export products (CSV)</button>
+      <button class="btn btn-ghost" id="btnExportSales">⬇ Export sales log (CSV)</button>
+    </div>
+    <div style="max-height:420px; overflow:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th><th>Name</th><th>Category</th>
+            <th class="num">Price (MWK)</th><th class="num">Stock</th><th class="num">Reorder at</th>
+            <th class="center">Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="productBody"></tbody>
+      </table>
+    </div>
+
+    <h2 style="margin-top:20px;">Add new product</h2>
+    <div class="row add-product-row">
+      <div><label>Name</label><input type="text" id="npName"></div>
+      <div><label>Category</label>
+        <select id="npCategory"></select>
+      </div>
+      <div><label>Price (MWK)</label><input type="number" id="npPrice" min="0"></div>
+      <div><label>Opening stock</label><input type="number" id="npStock" min="0" value="0"></div>
+      <div><label>Reorder at</label><input type="number" id="npReorder" min="0" value="5"></div>
+      <button class="btn btn-primary" id="btnAddProduct">Add product</button>
+    </div>
+  </div>
+
+  <div class="footer-note">Data is saved automatically as you use this tool. Use "Export products / sales" above to download a CSV backup any time.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATEGORIES = ["Food & Grocery","Beverages","Hygiene & Personal Care","Household","Health & Pharmacy","Other / Uncategorised"];
+const CAT_COLORS = { "Food & Grocery":"#2E86AB","Beverages":"#5FA8D3","Hygiene & Personal Care":"#1E8E5A","Household":"#B9791C","Health & Pharmacy":"#C0392B","Other / Uncategorised":"#8C8C8C" };
+const STATUS_COLORS = { "OK":"#1E8E5A","LOW STOCK":"#B9791C","OUT OF STOCK":"#C0392B" };
+
+const SEED_PRODUCTS = [
+["Sugar","Food & Grocery",86500,5],
+["Cooking Oil (Puma) - 40k","Food & Grocery",40000,5],
+["Cooking Oil (Puma) - 75k","Food & Grocery",75000,5],
+["Salt","Food & Grocery",9500,5],
+["Salt (Zee)","Food & Grocery",8600,5],
+["Safu","Food & Grocery",53000,5],
+["Safu (Pure)","Food & Grocery",63000,5],
+["Energy Drinks (Azam)","Beverages",26000,5],
+["Energy Drinks (Yes)","Beverages",23000,5],
+["Soya Pieces","Food & Grocery",32100,5],
+["Tistim","Other / Uncategorised",9500,5],
+["Pampers","Hygiene & Personal Care",9500,5],
+["Pampers (Goodbaby)","Hygiene & Personal Care",10000,5],
+["Kanniia Biscuits","Food & Grocery",28000,5],
+["Super Maheu","Beverages",18000,5],
+["Frooty 2L","Beverages",21000,5],
+["Water (Cool Drop)","Beverages",11000,5],
+["Water (Hygienic)","Beverages",9000,5],
+["First Choice","Food & Grocery",32200,5],
+["Blue Band","Food & Grocery",25000,5],
+["Peanut","Food & Grocery",80000,5],
+["Soft Care","Hygiene & Personal Care",9500,5],
+["Super Jet Bra","Other / Uncategorised",35000,5],
+["Yose Bok","Other / Uncategorised",9300,5],
+["Kumbukha","Other / Uncategorised",36500,5],
+["Shower 'n Sip","Hygiene & Personal Care",36000,5],
+["Azam Soap","Hygiene & Personal Care",25000,5],
+["Boom (Blue)","Household",38000,5],
+["Boom (Green)","Household",38000,5],
+["Skinla for Men - 16k","Hygiene & Personal Care",16000,5],
+["Skinla for Men - 26.5k","Hygiene & Personal Care",26500,5],
+["Dune Lotion","Hygiene & Personal Care",74000,5],
+["Kumba - 11k","Other / Uncategorised",11000,5],
+["Kumba - 6.5k","Other / Uncategorised",6500,5],
+["Puffs (Tommy)","Food & Grocery",10000,5],
+["Puffs (Tiger Stick)","Food & Grocery",9500,5],
+["Leopard Matches","Household",15000,5],
+["Baking Powder","Food & Grocery",18000,5],
+["Panda","Household",11000,5],
+["Soft Care Pad","Hygiene & Personal Care",15000,5],
+["Panado","Health & Pharmacy",11000,5],
+["Ufresh","Household",24000,5],
+["Fanta/Coca","Beverages",25000,5],
+["Ukwaju","Beverages",25000,5],
+["Embe","Beverages",25000,5],
+["Protex","Hygiene & Personal Care",36000,5],
+["Butex - 25k","Hygiene & Personal Care",25000,5],
+["Butex - 33k","Hygiene & Personal Care",33000,5],
+["Colgate","Hygiene & Personal Care",49000,5],
+["Yes Ginger","Beverages",22800,5],
+["Champion Yogurt","Food & Grocery",18000,5],
+["More","Other / Uncategorised",19000,5],
+["Freestyle Pad","Hygiene & Personal Care",19500,5],
+["Panty","Hygiene & Personal Care",18000,5],
+["Enjoy","Beverages",17500,5],
+["Larger","Beverages",14500,5],
+["Sona","Other / Uncategorised",30000,5],
+["Protex - 38k","Hygiene & Personal Care",38000,5],
+["Vaseline Garlic","Hygiene & Personal Care",26500,5],
+["Bentley","Other / Uncategorised",14000,5],
+["Mgo","Other / Uncategorised",23500,5],
+["Cot Zandu","Health & Pharmacy",5000,5],
+["Superglue","Household",4500,5],
+["Sobo","Beverages",67000,5],
+];
+
+let products = [];   // {code,name,category,price,stock,reorder}
+let sales = [];       // {id,code,qty,price,total,date}
+let cart = [];         // {code,qty}
+let appSettings = { managerPin: null };  // {managerPin}: protects delete/void
+
+function fmtMWK(n){
+  n = Math.round(n||0);
+  return n.toLocaleString('en-US') + " MWK";
+}
+function todayStr(){
+  const d = new Date();
+  const dateStr = d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+  const timeStr = d.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+  return dateStr + ' · ' + timeStr;
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function nextCode(){
+  let max = 0;
+  products.forEach(p=>{
+    const m = /^P(\d+)$/.exec(p.code);
+    if(m) max = Math.max(max, parseInt(m[1],10));
+  });
+  return "P" + String(max+1).padStart(3,'0');
+}
+function statusFor(p){
+  if(p.stock <= 0) return "OUT OF STOCK";
+  if(p.stock <= p.reorder) return "LOW STOCK";
+  return "OK";
+}
+function statusClass(s){
+  if(s==="OUT OF STOCK") return "status-OUT";
+  if(s==="LOW STOCK") return "status-LOW";
+  return "status-OK";
+}
+
+// ---------- persistence (offline, localStorage-backed) ----------
+async function loadData(){
+  try{
+    const raw = localStorage.getItem('heritage_products');
+    if(raw === null) throw new Error('none');
+    products = JSON.parse(raw);
+  }catch(e){
+    products = SEED_PRODUCTS.map((row,i)=>({
+      code: "P"+String(i+1).padStart(3,'0'),
+      name: row[0], category: row[1], price: row[2], stock: 0, reorder: row[3]
+    }));
+    localStorage.setItem('heritage_products', JSON.stringify(products));
+  }
+  try{
+    const raw = localStorage.getItem('heritage_sales');
+    if(raw === null) throw new Error('none');
+    sales = JSON.parse(raw);
+  }catch(e){
+    sales = [];
+    localStorage.setItem('heritage_sales', JSON.stringify(sales));
+  }
+  try{
+    const raw = localStorage.getItem('heritage_settings');
+    if(raw === null) throw new Error('none');
+    appSettings = JSON.parse(raw);
+  }catch(e){
+    appSettings = { managerPin: null };
+    localStorage.setItem('heritage_settings', JSON.stringify(appSettings));
+  }
+}
+async function saveSettings(){
+  localStorage.setItem('heritage_settings', JSON.stringify(appSettings));
+  localStorage.setItem('heritage_last_modified', String(Date.now()));
+  scheduleDriveSync();
+}
+async function saveProducts(){
+  localStorage.setItem('heritage_products', JSON.stringify(products));
+  localStorage.setItem('heritage_last_modified', String(Date.now()));
+  scheduleDriveSync();
+}
+async function saveSales(){
+  localStorage.setItem('heritage_sales', JSON.stringify(sales));
+  localStorage.setItem('heritage_last_modified', String(Date.now()));
+  scheduleDriveSync();
+}
+
+// ---------- rendering ----------
+function populateCategorySelects(){
+  const filt = document.getElementById('categoryFilter');
+  const np = document.getElementById('npCategory');
+  filt.innerHTML = '<option value="">All categories</option>' + CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
+  np.innerHTML = CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+function populateCodeList(){
+  const dl = document.getElementById('codeList');
+  dl.innerHTML = products.map(p=>`<option value="${p.code}">${p.name}</option>`).join('');
+}
+
+function doLookup(){
+  const code = document.getElementById('searchCode').value.trim().toUpperCase();
+  const box = document.getElementById('lookupResult');
+  const p = products.find(x=>x.code===code);
+  if(!p){ box.classList.remove('show'); return null; }
+  document.getElementById('lkName').textContent = p.name;
+  document.getElementById('lkPrice').textContent = fmtMWK(p.price);
+  document.getElementById('lkCat').textContent = p.category;
+  const st = statusFor(p);
+  document.getElementById('lkStock').innerHTML = p.stock + ' <span class="status-pill '+statusClass(st)+'">'+st+'</span>';
+  box.classList.add('show');
+  return p;
+}
+
+function renderCart(){
+  const tbody = document.getElementById('cartBody');
+  if(cart.length===0){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Cart is empty. Search a code above and add items</td></tr>';
+  } else {
+    tbody.innerHTML = cart.map((item,idx)=>{
+      const p = products.find(x=>x.code===item.code);
+      const total = (p?p.price:0) * item.qty;
+      return `<tr>
+        <td class="code-tag">${item.code}</td>
+        <td>${p?p.name:'?'}</td>
+        <td class="num">${item.qty}</td>
+        <td class="num">${fmtMWK(p?p.price:0)}</td>
+        <td class="num">${fmtMWK(total)}</td>
+        <td class="center"><button class="btn btn-ghost btn-sm" onclick="removeCartItem(${idx})">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+  const total = cart.reduce((s,item)=>{
+    const p = products.find(x=>x.code===item.code);
+    return s + (p?p.price:0)*item.qty;
+  },0);
+  document.getElementById('cartTotal').textContent = fmtMWK(total);
+}
+
+function renderProductTable(){
+  const filterText = document.getElementById('productSearch').value.trim().toLowerCase();
+  const filterCat = document.getElementById('categoryFilter').value;
+  const tbody = document.getElementById('productBody');
+  let list = products.filter(p=>{
+    const matchesText = !filterText || p.code.toLowerCase().includes(filterText) || p.name.toLowerCase().includes(filterText) || p.category.toLowerCase().includes(filterText);
+    const matchesCat = !filterCat || p.category===filterCat;
+    return matchesText && matchesCat;
+  });
+  if(list.length===0){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No products match your filter</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(p=>{
+    const st = statusFor(p);
+    const catOptions = CATEGORIES.map(c=>`<option value="${c}" ${c===p.category?'selected':''}>${c}</option>`).join('');
+    return `<tr data-code="${p.code}">
+      <td class="code-tag">${p.code}</td>
+      <td>${p.name}</td>
+      <td><select class="mini-input" style="width:150px;" onchange="updateProduct('${p.code}','category',this.value)">${catOptions}</select></td>
+      <td class="num"><input type="number" class="mini-input price" value="${p.price}" onchange="updateProduct('${p.code}','price',this.value)"></td>
+      <td class="num"><input type="number" class="mini-input" value="${p.stock}" onchange="updateProduct('${p.code}','stock',this.value)"></td>
+      <td class="num"><input type="number" class="mini-input" value="${p.reorder}" onchange="updateProduct('${p.code}','reorder',this.value)"></td>
+      <td class="center"><span class="status-pill ${statusClass(st)}">${st}</span></td>
+      <td class="center"><button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.code}')">Delete</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTopSellers(){
+  const byCode = {};
+  sales.forEach(s=>{
+    if(!byCode[s.code]) byCode[s.code] = {qty:0, revenue:0};
+    byCode[s.code].qty += s.qty;
+    byCode[s.code].revenue += s.total;
+  });
+  const rows = Object.entries(byCode)
+    .map(([code,v])=>{
+      const p = products.find(x=>x.code===code);
+      return {code, name: p?p.name:'(deleted)', qty:v.qty, revenue:v.revenue};
+    })
+    .sort((a,b)=>b.qty-a.qty)
+    .slice(0,5);
+  const tbody = document.getElementById('topSellersBody');
+  if(rows.length===0){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No sales recorded yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map((r,i)=>`<tr>
+    <td><span class="rank-badge">${i+1}</span></td>
+    <td class="code-tag">${r.code}</td>
+    <td>${r.name}</td>
+    <td class="num">${r.qty}</td>
+    <td class="num">${fmtMWK(r.revenue)}</td>
+  </tr>`).join('');
+}
+
+function fmtDateTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleString(undefined, { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function timeAgo(iso){
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return mins + ' min ago';
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return hrs + ' hr' + (hrs>1?'s':'') + ' ago';
+  const days = Math.floor(hrs/24);
+  return days + ' day' + (days>1?'s':'') + ' ago';
+}
+
+function renderTransactions(){
+  const groups = {};
+  sales.forEach(s=>{
+    const key = s.txnId || s.id;
+    if(!groups[key]) groups[key] = { txnId:key, date:s.date, lines:[] };
+    groups[key].lines.push(s);
+  });
+  const allTxns = Object.values(groups).sort((a,b)=> new Date(b.date) - new Date(a.date));
+
+  const tbody = document.getElementById('txnBody');
+  const empty = document.getElementById('txnEmpty');
+  const lastTxnAgo = document.getElementById('lastTxnAgo');
+
+  if(allTxns.length===0){
+    tbody.innerHTML = '';
+    empty.textContent = 'No sales recorded yet. Completed sales will appear here.';
+    empty.style.display = 'block';
+    lastTxnAgo.textContent = '';
+    return;
+  }
+  lastTxnAgo.textContent = '• last sale ' + timeAgo(allTxns[0].date);
+
+  // Apply From / To / text filters
+  const fromVal = document.getElementById('txnFrom').value;
+  const toVal = document.getElementById('txnTo').value;
+  const searchVal = document.getElementById('txnSearch').value.trim().toLowerCase();
+  const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+  const toDate = toVal ? new Date(toVal + 'T23:59:59') : null;
+  const filtering = !!(fromVal || toVal || searchVal);
+
+  let txns = allTxns.filter(t=>{
+    const d = new Date(t.date);
+    if(fromDate && d < fromDate) return false;
+    if(toDate && d > toDate) return false;
+    if(searchVal){
+      const haystack = (t.txnId + ' ' + t.lines.map(l=>l.name||l.code).join(' ')).toLowerCase();
+      if(!haystack.includes(searchVal)) return false;
+    }
+    return true;
+  });
+
+  if(!filtering) txns = txns.slice(0,25);
+
+  if(txns.length===0){
+    tbody.innerHTML = '';
+    empty.textContent = 'No transactions match this filter.';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = txns.map(t=>{
+    const total = t.lines.reduce((s,l)=>s+l.total,0);
+    const itemsSummary = t.lines.map(l=>`${l.qty}× ${l.name || l.code}`).join(', ');
+    return `<tr>
+      <td style="white-space:nowrap;">${fmtDateTime(t.date)}<br><span style="font-size:11px; color:#8C96A5;">${timeAgo(t.date)}</span></td>
+      <td class="code-tag">${t.txnId}</td>
+      <td style="max-width:260px;">${itemsSummary}</td>
+      <td class="num">${fmtMWK(total)}</td>
+      <td><button class="btn btn-ghost btn-void" data-txn="${t.txnId}" style="padding:4px 10px; font-size:12px;">Void</button></td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.btn-void').forEach(btn=>{
+    btn.addEventListener('click', ()=> voidTransaction(btn.dataset.txn));
+  });
+}
+
+async function voidTransaction(txnId){
+  const lines = sales.filter(s=>(s.txnId||s.id)===txnId);
+  if(lines.length===0) return;
+  if(!confirm(`Void this transaction? This restores ${lines.length} item(s) back to stock and removes it from the sales log.`)) return;
+  if(!checkManagerPin('void this transaction')) return;
+  lines.forEach(l=>{
+    const p = products.find(x=>x.code===l.code);
+    if(p) p.stock += l.qty;
+  });
+  sales = sales.filter(s=>(s.txnId||s.id)!==txnId);
+  await saveProducts();
+  await saveSales();
+  renderAll();
+  showToast('Transaction voided. Stock restored');
+}
+
+function renderKPIs(){
+  const lowOrOut = products.filter(p=>statusFor(p)!=="OK").length;
+  const stockValue = products.reduce((s,p)=>s+p.price*p.stock,0);
+  const revenue = sales.reduce((s,x)=>s+x.total,0);
+  document.getElementById('kpiLow').textContent = lowOrOut;
+  document.getElementById('kpiStockValue').textContent = fmtMWK(stockValue);
+  document.getElementById('kpiRevenue').textContent = fmtMWK(revenue);
+
+  const today = new Date();
+  const isToday = (iso) => {
+    const d = new Date(iso);
+    return d.getFullYear()===today.getFullYear() && d.getMonth()===today.getMonth() && d.getDate()===today.getDate();
+  };
+  const todaySales = sales.filter(s=>isToday(s.date));
+  const revenueToday = todaySales.reduce((s,x)=>s+x.total,0);
+  const txnToday = new Set(todaySales.map(s=>s.txnId || s.id)).size;
+  document.getElementById('kpiRevenueToday').textContent = fmtMWK(revenueToday);
+  document.getElementById('kpiTxnToday').textContent = txnToday;
+}
+
+function drawDonut(canvasId, legendId, dataObj, colorMap){
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const entries = Object.entries(dataObj).filter(([k,v])=>v>0);
+  const total = entries.reduce((s,[,v])=>s+v,0);
+  const cx = w/2, cy = h/2, rOuter = Math.min(w,h)/2 - 4, rInner = rOuter*0.58;
+  if(total<=0){
+    ctx.beginPath(); ctx.arc(cx,cy,rOuter,0,Math.PI*2); ctx.fillStyle="#EEF1F6"; ctx.fill();
+    ctx.font = "12px sans-serif"; ctx.fillStyle="#66707E"; ctx.textAlign="center";
+    ctx.fillText("No data yet", cx, cy+4);
+    document.getElementById(legendId).innerHTML = '<div class="legend-item"><span style="color:#66707E;">Nothing to show yet</span></div>';
+    return;
+  }
+  let start = -Math.PI/2;
+  entries.forEach(([k,v])=>{
+    const slice = (v/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,rOuter,start,start+slice);
+    ctx.closePath();
+    ctx.fillStyle = colorMap[k] || "#8C8C8C";
+    ctx.fill();
+    start += slice;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,rInner,0,Math.PI*2); ctx.fillStyle="#FFFFFF"; ctx.fill();
+
+  const legend = document.getElementById(legendId);
+  legend.innerHTML = entries.sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+    const pct = ((v/total)*100).toFixed(0);
+    return `<div class="legend-item">
+      <span class="legend-dot" style="background:${colorMap[k]||'#8C8C8C'}"></span>
+      <span class="legend-label">${k}</span>
+      <span class="legend-val">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function renderCharts(){
+  const revByCat = {};
+  CATEGORIES.forEach(c=>revByCat[c]=0);
+  sales.forEach(s=>{
+    const p = products.find(x=>x.code===s.code);
+    const cat = p ? p.category : "Other / Uncategorised";
+    revByCat[cat] = (revByCat[cat]||0) + s.total;
+  });
+  drawDonut('chartCategory','legendCategory', revByCat, CAT_COLORS);
+
+  const statusCounts = {"OK":0,"LOW STOCK":0,"OUT OF STOCK":0};
+  products.forEach(p=>{ statusCounts[statusFor(p)]++; });
+  drawDonut('chartStatus','legendStatus', statusCounts, STATUS_COLORS);
+}
+
+function renderAll(){
+  populateCodeList();
+  renderCart();
+  renderProductTable();
+  renderTopSellers();
+  renderTransactions();
+  renderKPIs();
+  renderCharts();
+}
+
+// ---------- Manager passcode (protects Delete product & Void transaction) ----------
+function checkManagerPin(actionLabel){
+  if(!appSettings.managerPin){
+    // No PIN set yet: action proceeds, but nudge toward setting one up.
+    showToast('Tip: set a manager passcode in ⚙ Settings to restrict this action');
+    return true;
+  }
+  const entered = prompt(`Manager passcode required to ${actionLabel}:`);
+  if(entered === null) return false; // cancelled
+  if(entered !== appSettings.managerPin){
+    showToast('Incorrect passcode');
+    return false;
+  }
+  return true;
+}
+
+window.openManagerSettings = async function(){
+  if(!appSettings.managerPin){
+    const p1 = prompt('Create a manager passcode (used to approve deleting products and voiding sales):');
+    if(p1 === null || p1.trim()==='') return;
+    const p2 = prompt('Confirm the passcode:');
+    if(p1 !== p2){ showToast('Passcodes did not match'); return; }
+    appSettings.managerPin = p1.trim();
+    await saveSettings();
+    showToast('Manager passcode set');
+  }else{
+    const current = prompt('Enter current manager passcode:');
+    if(current === null) return;
+    if(current !== appSettings.managerPin){ showToast('Incorrect passcode'); return; }
+    const choice = prompt('Type NEW to set a new passcode, or REMOVE to turn off passcode protection:');
+    if(choice === null) return;
+    if(String(choice).trim().toUpperCase() === 'REMOVE'){
+      appSettings.managerPin = null;
+      await saveSettings();
+      showToast('Passcode protection removed');
+    }else if(String(choice).trim().toUpperCase() === 'NEW'){
+      const p1 = prompt('Enter new passcode:');
+      if(p1 === null || p1.trim()==='') return;
+      const p2 = prompt('Confirm new passcode:');
+      if(p1 !== p2){ showToast('Passcodes did not match'); return; }
+      appSettings.managerPin = p1.trim();
+      await saveSettings();
+      showToast('Manager passcode updated');
+    }
+  }
+};
+
+// ---------- actions ----------
+window.removeCartItem = function(idx){
+  cart.splice(idx,1);
+  renderCart();
+};
+
+window.updateProduct = async function(code, field, value){
+  const p = products.find(x=>x.code===code);
+  if(!p) return;
+  if(field==="category"){ p.category = value; }
+  else { p[field] = Math.max(0, parseFloat(value)||0); }
+  await saveProducts();
+  renderAll();
+  showToast("Saved");
+};
+
+window.deleteProduct = async function(code){
+  const p = products.find(x=>x.code===code);
+  if(!p) return;
+  if(!confirm(`Delete "${p.name}" (${code})? This can't be undone.`)) return;
+  if(!checkManagerPin('delete this product')) return;
+  products = products.filter(x=>x.code!==code);
+  cart = cart.filter(x=>x.code!==code);
+  await saveProducts();
+  renderAll();
+  showToast("Product deleted");
+};
+
+document.getElementById('searchCode').addEventListener('input', doLookup);
+
+document.getElementById('btnAddCart').addEventListener('click', ()=>{
+  const p = doLookup();
+  const qty = parseInt(document.getElementById('searchQty').value,10);
+  if(!p){ showToast("Enter a valid product code"); return; }
+  if(!qty || qty<=0){ showToast("Enter a quantity"); return; }
+  const existing = cart.find(c=>c.code===p.code);
+  if(existing) existing.qty += qty;
+  else cart.push({code:p.code, qty});
+  renderCart();
+  document.getElementById('searchQty').value = 1;
+  showToast(`Added ${qty} × ${p.name}`);
+});
+
+document.getElementById('btnClearCart').addEventListener('click', ()=>{
+  if(cart.length===0) return;
+  if(confirm("Clear all items from the cart?")){
+    cart = [];
+    renderCart();
+  }
+});
+
+document.getElementById('btnSaveSale').addEventListener('click', async ()=>{
+  if(cart.length===0){ showToast("Cart is empty"); return; }
+  const now = new Date();
+  const dateNow = now.toISOString();
+  const txnId = "TXN-" + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') +
+                "-" + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0');
+  cart.forEach(item=>{
+    const p = products.find(x=>x.code===item.code);
+    if(!p) return;
+    const total = p.price * item.qty;
+    sales.push({ id:"S"+Date.now()+Math.floor(Math.random()*1000), txnId, code:p.code, name:p.name, qty:item.qty, price:p.price, total, date:dateNow });
+    p.stock = Math.max(0, p.stock - item.qty);
+  });
+  await saveProducts();
+  await saveSales();
+  cart = [];
+  renderAll();
+  showToast("Sale saved. Stock updated");
+});
+
+document.getElementById('productSearch').addEventListener('input', renderProductTable);
+document.getElementById('categoryFilter').addEventListener('change', renderProductTable);
+
+document.getElementById('txnFrom').addEventListener('change', renderTransactions);
+document.getElementById('txnTo').addEventListener('change', renderTransactions);
+document.getElementById('txnSearch').addEventListener('input', renderTransactions);
+document.getElementById('btnTxnToday').addEventListener('click', ()=>{
+  const today = new Date();
+  const iso = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  document.getElementById('txnFrom').value = iso;
+  document.getElementById('txnTo').value = iso;
+  renderTransactions();
+});
+document.getElementById('btnTxnClear').addEventListener('click', ()=>{
+  document.getElementById('txnFrom').value = '';
+  document.getElementById('txnTo').value = '';
+  document.getElementById('txnSearch').value = '';
+  renderTransactions();
+});
+
+document.getElementById('btnAddProduct').addEventListener('click', async ()=>{
+  const name = document.getElementById('npName').value.trim();
+  const category = document.getElementById('npCategory').value;
+  const price = parseFloat(document.getElementById('npPrice').value);
+  const stock = parseInt(document.getElementById('npStock').value,10) || 0;
+  const reorder = parseInt(document.getElementById('npReorder').value,10) || 0;
+  if(!name){ showToast("Enter a product name"); return; }
+  if(!price || price<=0){ showToast("Enter a valid price"); return; }
+  const code = nextCode();
+  products.push({code, name, category, price, stock, reorder});
+  await saveProducts();
+  document.getElementById('npName').value='';
+  document.getElementById('npPrice').value='';
+  document.getElementById('npStock').value=0;
+  document.getElementById('npReorder').value=5;
+  renderAll();
+  showToast(`Added ${code}: ${name}`);
+});
+
+// ---------- CSV export ----------
+function csvEscape(val){
+  const s = String(val ?? '');
+  if(/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+  return s;
+}
+function downloadCSV(filename, rows){
+  const csv = rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function exportProducts(){
+  const rows = [['Code','Name','Category','Price (MWK)','Stock','Reorder At','Status']];
+  products.forEach(p=>{
+    rows.push([p.code, p.name, p.category, p.price, p.stock, p.reorder, statusFor(p)]);
+  });
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadCSV(`heritage-investments-products-${stamp}.csv`, rows);
+  showToast('Products exported');
+}
+function exportSales(){
+  const rows = [['Transaction ID','Sale ID','Code','Product','Qty','Unit Price (MWK)','Total (MWK)','Date & Time']];
+  sales.forEach(s=>{
+    const p = products.find(x=>x.code===s.code);
+    rows.push([s.txnId||'', s.id, s.code, p?p.name:(s.name||'(deleted)'), s.qty, s.price, s.total, fmtDateTime(s.date)]);
+  });
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadCSV(`heritage-investments-sales-${stamp}.csv`, rows);
+  showToast('Sales log exported');
+}
+document.getElementById('btnExportProducts').addEventListener('click', exportProducts);
+document.getElementById('btnExportSales').addEventListener('click', exportSales);
+
+// ---------- Google Drive sync ----------
+const DRIVE_CLIENT_ID = '822228593446-df8j5v4vpcvcpr4sfvurgjc2j11632gu.apps.googleusercontent.com';
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_FILENAME = 'heritage-investments-data.json';
+
+let driveTokenClient = null;
+let driveAccessToken = null;
+let driveFileId = localStorage.getItem('heritage_drive_file_id') || null;
+let driveSyncTimer = null;
+let driveSigningIn = false;
+
+function setDriveStatus(msg){
+  const el = document.getElementById('driveStatus');
+  if(el) el.textContent = msg;
+}
+
+function initDriveTokenClient(){
+  if(!window.google || !google.accounts || !google.accounts.oauth2) return null;
+  return google.accounts.oauth2.initTokenClient({
+    client_id: DRIVE_CLIENT_ID,
+    scope: DRIVE_SCOPE,
+    callback: async (resp) => {
+      driveSigningIn = false;
+      clearTimeout(driveConnect._timeout);
+      if(resp.error){
+        setDriveStatus('Sign-in failed. Click Connect Google Drive to retry');
+        return;
+      }
+      driveAccessToken = resp.access_token;
+      document.getElementById('btnDriveSignIn').textContent = '✓ Drive Connected';
+      await driveInitialSync();
+    }
+  });
+}
+
+function driveConnect(){
+  if(!driveTokenClient) driveTokenClient = initDriveTokenClient();
+  if(!driveTokenClient){
+    setDriveStatus('Google sign-in not ready. Check your connection and reload');
+    return;
+  }
+  driveSigningIn = true;
+  setDriveStatus('Connecting…');
+  clearTimeout(driveConnect._timeout);
+  driveConnect._timeout = setTimeout(() => {
+    if(driveSigningIn){
+      driveSigningIn = false;
+      setDriveStatus('Sign-in did not complete. Click Connect Google Drive to retry');
+    }
+  }, 20000);
+  driveTokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+async function driveApi(path, options={}){
+  const res = await fetch('https://www.googleapis.com/drive/v3/' + path, {
+    ...options,
+    headers: { 'Authorization': 'Bearer ' + driveAccessToken, ...(options.headers||{}) }
+  });
+  if(res.status === 401){ throw new Error('token_expired'); }
+  return res;
+}
+
+async function driveFindFile(){
+  const q = encodeURIComponent(`name='${DRIVE_FILENAME}' and trashed=false`);
+  const res = await driveApi(`files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)`);
+  const data = await res.json();
+  return (data.files && data.files[0]) ? data.files[0] : null;
+}
+
+async function driveCreateFile(content){
+  const boundary = 'heritage_boundary';
+  const metadata = { name: DRIVE_FILENAME, mimeType: 'application/json' };
+  const body =
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`;
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + driveAccessToken,
+      'Content-Type': `multipart/related; boundary=${boundary}`
+    },
+    body
+  });
+  const data = await res.json();
+  return data.id;
+}
+
+async function driveUpdateFile(fileId, content){
+  await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': 'Bearer ' + driveAccessToken,
+      'Content-Type': 'application/json'
+    },
+    body: content
+  });
+}
+
+async function driveGetFileContent(fileId){
+  const res = await driveApi(`files/${fileId}?alt=media`);
+  return await res.text();
+}
+
+async function driveInitialSync(){
+  try{
+    setDriveStatus('Syncing…');
+    let file = driveFileId ? { id: driveFileId } : await driveFindFile();
+    if(!file){
+      file = await driveFindFile();
+    }
+    const localModified = parseInt(localStorage.getItem('heritage_last_modified') || '0', 10);
+
+    if(file){
+      driveFileId = file.id;
+      localStorage.setItem('heritage_drive_file_id', driveFileId);
+      const remoteRaw = await driveGetFileContent(driveFileId);
+      let remote;
+      try{ remote = JSON.parse(remoteRaw); }catch(e){ remote = null; }
+      if(remote && typeof remote.updatedAt === 'number' && remote.updatedAt > localModified){
+        // Drive copy is newer: pull it in
+        products = remote.products || products;
+        sales = remote.sales || sales;
+        appSettings = remote.settings || appSettings;
+        localStorage.setItem('heritage_products', JSON.stringify(products));
+        localStorage.setItem('heritage_sales', JSON.stringify(sales));
+        localStorage.setItem('heritage_settings', JSON.stringify(appSettings));
+        localStorage.setItem('heritage_last_modified', String(remote.updatedAt));
+        renderAll();
+        setDriveStatus('Loaded latest data from Drive');
+      }else{
+        // Local copy is newer or same: push it up
+        await pushToDrive();
+        setDriveStatus('Synced');
+      }
+    }else{
+      const id = await driveCreateFile(buildSyncPayload());
+      driveFileId = id;
+      localStorage.setItem('heritage_drive_file_id', driveFileId);
+      setDriveStatus('Synced (new backup created)');
+    }
+  }catch(e){
+    setDriveStatus('Sync failed. Will retry on next change');
+  }
+}
+
+function buildSyncPayload(){
+  const updatedAt = parseInt(localStorage.getItem('heritage_last_modified') || String(Date.now()), 10);
+  return JSON.stringify({ products, sales, settings: appSettings, updatedAt });
+}
+
+async function pushToDrive(){
+  if(!driveAccessToken) return;
+  try{
+    if(!driveFileId){
+      const id = await driveCreateFile(buildSyncPayload());
+      driveFileId = id;
+      localStorage.setItem('heritage_drive_file_id', driveFileId);
+    }else{
+      await driveUpdateFile(driveFileId, buildSyncPayload());
+    }
+    setDriveStatus('Synced ' + new Date().toLocaleTimeString());
+  }catch(e){
+    if(String(e.message).includes('token_expired')){
+      setDriveStatus('Reconnect needed');
+      driveAccessToken = null;
+      document.getElementById('btnDriveSignIn').textContent = '🔗 Connect Google Drive';
+    }else{
+      setDriveStatus('Sync failed. Will retry');
+    }
+  }
+}
+
+function scheduleDriveSync(){
+  if(!driveAccessToken) return;
+  clearTimeout(driveSyncTimer);
+  driveSyncTimer = setTimeout(pushToDrive, 1500);
+}
+
+document.getElementById('btnDriveSignIn').addEventListener('click', () => {
+  driveConnect();
+});
+
+// ---------- PWA: service worker + install prompt ----------
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').then((reg) => {
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if(newWorker.state === 'activated'){
+            showToast('Updated. Reload for the latest version');
+          }
+        });
+      });
+      reg.update();
+    }).catch(()=>{});
+  });
+}
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('btnInstall');
+  btn.style.display = 'inline-block';
+  btn.addEventListener('click', async () => {
+    btn.style.display = 'none';
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+  });
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('btnInstall').style.display = 'none';
+  showToast('Installed. Find it on your home screen / apps list');
+});
+
+// ---------- init ----------
+(async function init(){
+  document.getElementById('dateBadge').textContent = todayStr();
+  populateCategorySelects();
+  await loadData();
+  renderAll();
+
+  // Live clock + auto-refresh "time ago" labels every 30s, and KPIs at midnight rollover
+  setInterval(()=>{
+    document.getElementById('dateBadge').textContent = todayStr();
+    renderTransactions();
+    renderKPIs();
+  }, 30000);
+})();
+</script>
+</body>
+</html>
