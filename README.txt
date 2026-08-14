@@ -36,6 +36,22 @@ OPTION 3: Company/local network hosting
   just upload this folder there and open the URL from any device on
   that network, same install steps as Option 1.
 
+RECEIPTS & QUOTATIONS
+Every completed sale automatically opens a printable receipt (with a
+QR code encoding the transaction ID, date, and total). You can also
+reprint any past sale's receipt from the "Receipt" button in Recent
+Transactions.
+
+The Quotations section lets you build a price quote for a customer
+(search products, set quantities, optional customer name and valid
+until date) without touching stock. Generate it to get a numbered,
+printable quotation (also with a QR code), saved to a history list
+where you can view/print it again, delete it, or click "To sale" to
+push its items into the cart and complete it as a real sale.
+
+QR codes are generated entirely offline (no internet needed) using a
+small vendored library, so this works even without a connection.
+
 MANAGER PASSCODE (team protection)
 Click "⚙ Manager Settings" in the top bar to set a passcode. Once set,
 deleting a product or voiding a sale will ask for that passcode before
