@@ -36,6 +36,26 @@ OPTION 3: Company/local network hosting
   just upload this folder there and open the URL from any device on
   that network, same install steps as Option 1.
 
+LAYOUT CHANGES
+The full Product Database (add/edit/delete every product) is now
+tucked behind a "📦 Manage products" button near the bottom of the
+page, collapsed by default, to keep the main screen shorter.
+
+For quick day-to-day stock adjustments without opening the full
+database, use the new "Quick stock update" box (top of the right
+column): type a product code, see its current stock, set a new
+number (or use the +10 / -10 buttons), and save.
+
+Top 5 best sellers and the two charts have moved to the right-hand
+column alongside the new stock widget, balancing the two columns.
+
+PRINTING
+Receipts and quotations now print cleanly on a single page, with
+Heritage Traders (HT) branding and contact details at the top
+(heritagetraders@gmail.com, 0999925883, Lilongwe, Malawi). Note this
+business name is used specifically on printed documents; the app
+itself is still called AGK Inventory.
+
 RECEIPTS & QUOTATIONS
 Every completed sale automatically opens a printable receipt (with a
 QR code encoding the transaction ID, date, and total). You can also

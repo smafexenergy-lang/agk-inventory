@@ -142,6 +142,7 @@
   .doc-header .doc-logo{width:44px; height:44px; border-radius:11px; background:linear-gradient(135deg,var(--teal) 0%, #7FC8E8 100%); display:inline-flex; align-items:center; justify-content:center; margin-bottom:8px;}
   .doc-header h3{margin:2px 0; font-size:17px; color:var(--navy);}
   .doc-header .doc-sub{font-size:11px; color:var(--muted);}
+  .doc-header .doc-contact{font-size:10px; color:var(--muted); margin-top:3px;}
   .doc-meta{font-size:12px; color:var(--ink); margin:14px 0 10px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;}
   .doc-table{width:100%; border-collapse:collapse; font-size:12px; margin-bottom:10px;}
   .doc-table th{border-bottom:1px solid #333; text-align:left; padding:4px 2px; font-size:11px; text-transform:uppercase;}
@@ -150,11 +151,20 @@
   .doc-qr{text-align:center; margin:16px 0 8px;}
   .doc-footer{text-align:center; font-size:11px; color:var(--muted); margin-top:10px;}
   @media print{
-    body *{visibility:hidden;}
-    #printArea, #printArea *{visibility:visible;}
-    #printOverlay{position:absolute; inset:auto; background:none;}
-    #printArea{position:absolute; top:0; left:0; width:100%; padding:0;}
-    #btnDoPrint, #btnClosePrint{display:none;}
+    @page{ size:auto; margin:10mm; }
+    html, body{ height:auto !important; margin:0 !important; padding:0 !important; }
+    body > *:not(#printOverlay){ display:none !important; }
+    #printOverlay{
+      all:unset !important; display:block !important; position:static !important;
+    }
+    #printOverlay > div{
+      background:#fff !important; box-shadow:none !important; border-radius:0 !important;
+      max-width:100% !important; width:100% !important; max-height:none !important; overflow:visible !important;
+    }
+    #printArea{ padding:0 !important; }
+    #btnDoPrint, #btnClosePrint{ display:none !important; }
+    .doc-table{ font-size:11px; }
+    .doc-header .doc-logo{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -309,6 +319,35 @@
         </table>
         <div id="txnEmpty" style="display:none; color:#66707E; font-size:13px; padding:10px 2px;">No sales recorded yet. Completed sales will appear here.</div>
       </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <div class="card">
+        <h2>Quick stock update</h2>
+        <div class="row">
+          <div>
+            <label>Product code</label>
+            <input type="text" id="qsCode" list="codeList" placeholder="e.g. P001" autocomplete="off">
+          </div>
+        </div>
+        <div id="qsInfo" style="display:none; margin:10px 0; font-size:13px; color:var(--muted);">
+          <b id="qsName" style="color:var(--ink);"></b> — current stock: <b id="qsCurrentStock" style="color:var(--navy);"></b>
+        </div>
+        <div class="row">
+          <div>
+            <label>Set new stock qty</label>
+            <input type="number" id="qsNewStock" min="0" placeholder="e.g. 50">
+          </div>
+          <div style="display:flex; align-items:flex-end; gap:8px;">
+            <button class="btn btn-ghost" id="qsMinus" style="padding:8px 14px;">−10</button>
+            <button class="btn btn-ghost" id="qsPlus" style="padding:8px 14px;">+10</button>
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:12px; margin-bottom:0;">
+          <button class="btn btn-save" id="btnQuickStockSave">Save stock update</button>
+        </div>
+      </div>
 
       <div class="card">
         <h2>Top 5 best sellers</h2>
@@ -317,10 +356,7 @@
           <tbody id="topSellersBody"></tbody>
         </table>
       </div>
-    </div>
 
-    <!-- RIGHT COLUMN -->
-    <div>
       <div class="card">
         <h2>Revenue by category</h2>
         <div class="chart-wrap">
@@ -339,7 +375,11 @@
   </div>
 
   <div class="card">
-    <h2>Product database</h2>
+    <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" id="toggleProductDb">
+      <h2 style="margin:0;">Product database <span style="font-size:12px; font-weight:400; color:#66707E;">(full list, add / edit / delete)</span></h2>
+      <button class="btn btn-ghost" id="btnToggleProductDb" style="padding:6px 14px;">📦 Manage products ▾</button>
+    </div>
+    <div id="productDbSection" style="display:none; margin-top:14px;">
     <div class="toolbar">
       <input type="text" id="productSearch" class="search-box" placeholder="Filter by code, name or category...">
       <select id="categoryFilter" style="max-width:220px;"><option value="">All categories</option></select>
@@ -369,6 +409,7 @@
       <div><label>Opening stock</label><input type="number" id="npStock" min="0" value="0"></div>
       <div><label>Reorder at</label><input type="number" id="npReorder" min="0" value="5"></div>
       <button class="btn btn-primary" id="btnAddProduct">Add product</button>
+    </div>
     </div>
   </div>
 
@@ -3162,8 +3203,9 @@ function docHeaderHtml(docTypeLabel){
           <rect x="16.6" y="6" width="3.4" height="15" rx="0.6" fill="#FFFFFF"/>
         </svg>
       </div>
-      <h3>AGK Inventory</h3>
+      <h3>Heritage Traders (HT)</h3>
       <div class="doc-sub">${docTypeLabel}</div>
+      <div class="doc-contact">heritagetraders@gmail.com &nbsp;|&nbsp; 0999925883 &nbsp;|&nbsp; Lilongwe, Malawi</div>
     </div>`;
 }
 
@@ -3194,7 +3236,7 @@ function openReceipt(txnId){
       <tfoot><tr class="doc-total-row"><td colspan="3">TOTAL (MWK)</td><td class="num">${fmtMWK(total)}</td></tr></tfoot>
     </table>
     <div class="doc-qr">${qrSvg(qrPayload, 110)}</div>
-    <div class="doc-footer">Thank you for shopping with AGK Inventory</div>
+    <div class="doc-footer">Thank you for shopping with Heritage Traders</div>
   `;
   openPrintOverlay(html);
 }
@@ -3397,6 +3439,54 @@ document.getElementById('btnClearCart').addEventListener('click', ()=>{
     cart = [];
     renderCart();
   }
+});
+
+document.getElementById('toggleProductDb').addEventListener('click', toggleProductDbSection);
+document.getElementById('btnToggleProductDb').addEventListener('click', (e)=>{ e.stopPropagation(); toggleProductDbSection(); });
+function toggleProductDbSection(){
+  const section = document.getElementById('productDbSection');
+  const btn = document.getElementById('btnToggleProductDb');
+  const isHidden = section.style.display === 'none';
+  section.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? '📦 Hide products ▴' : '📦 Manage products ▾';
+}
+
+function qsLookup(){
+  const code = document.getElementById('qsCode').value.trim().toUpperCase();
+  const p = products.find(x=>x.code===code);
+  const info = document.getElementById('qsInfo');
+  if(!p){ info.style.display = 'none'; return null; }
+  document.getElementById('qsName').textContent = `${p.code} — ${p.name}`;
+  document.getElementById('qsCurrentStock').textContent = p.stock;
+  document.getElementById('qsNewStock').value = p.stock;
+  info.style.display = 'block';
+  return p;
+}
+document.getElementById('qsCode').addEventListener('input', qsLookup);
+document.getElementById('qsCode').addEventListener('change', qsLookup);
+
+document.getElementById('qsPlus').addEventListener('click', ()=>{
+  const field = document.getElementById('qsNewStock');
+  field.value = (parseInt(field.value,10) || 0) + 10;
+});
+document.getElementById('qsMinus').addEventListener('click', ()=>{
+  const field = document.getElementById('qsNewStock');
+  field.value = Math.max(0, (parseInt(field.value,10) || 0) - 10);
+});
+
+document.getElementById('btnQuickStockSave').addEventListener('click', async ()=>{
+  const code = document.getElementById('qsCode').value.trim().toUpperCase();
+  const p = products.find(x=>x.code===code);
+  if(!p){ showToast('Enter a valid product code'); return; }
+  const newQty = parseInt(document.getElementById('qsNewStock').value,10);
+  if(isNaN(newQty) || newQty < 0){ showToast('Enter a valid quantity'); return; }
+  p.stock = newQty;
+  await saveProducts();
+  renderAll();
+  document.getElementById('qsCode').value = '';
+  document.getElementById('qsInfo').style.display = 'none';
+  document.getElementById('qsNewStock').value = '';
+  showToast(`${p.name} stock updated to ${newQty}`);
 });
 
 document.getElementById('btnAddQuoteLine').addEventListener('click', ()=>{
