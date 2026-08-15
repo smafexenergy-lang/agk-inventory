@@ -63,13 +63,13 @@ one long scroll.
 
 LOADING SPLASH SCREEN
 When you open the app, a branded loading screen (logo, "AGK
-Inventory", progress bar) shows for about 15 seconds before revealing
-the dashboard. Your data is actually loaded well before that in the
-background, so the delay is purely presentational branding, not a
-technical wait. If 15 seconds feels too long day-to-day, this is a
-single number in the code (SPLASH_DURATION_MS near the very end of
-index.html) that's easy to shorten, just say the word and I'll adjust
-it.
+Inventory", a four-square pulsing loader) shows for about 15 seconds
+before revealing the dashboard. Your data is actually loaded well
+before that in the background, so the delay is purely presentational
+branding, not a technical wait. If 15 seconds feels too long
+day-to-day, this is a single number in the code (SPLASH_DURATION_MS
+near the very end of index.html) that's easy to shorten, just say the
+word and I'll adjust it.
 
 RECEIPT & QUOTATION BRANDING
 Each printout shows Heritage Traders (HT) with the logo, contact
@@ -93,10 +93,12 @@ automatically.
 
 DASHBOARD LAYOUT
 The Dashboard page has two columns: search, cart, and checkout on the
-left; Quick Stock Update, Top 5 Best Sellers, and the two charts on
-the right. Use "Quick stock update" for fast day-to-day adjustments
-(type a code, set a new number or use +10/-10, save) without needing
-to open the full Products page.
+left; Quick Stock Update and Top 5 Best Sellers on the right. Use
+"Quick stock update" for fast day-to-day adjustments (type a code,
+set a new number or use +10/-10, save) without needing to open the
+full Products page. The two donut charts (revenue by category, stock
+status) that used to sit here have been removed to keep the page
+shorter and cleaner.
 
 PRINTING
 Receipts and quotations now print cleanly on a single page, with

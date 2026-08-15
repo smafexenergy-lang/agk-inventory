@@ -114,13 +114,6 @@
   .mini-input.price{width:90px;}
   .toolbar{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
   .search-box{flex:1; min-width:180px;}
-  .chart-wrap{display:flex; align-items:center; gap:18px;}
-  canvas{flex-shrink:0;}
-  .legend{font-size:12px; flex:1;}
-  .legend-item{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
-  .legend-dot{width:10px; height:10px; border-radius:3px; flex-shrink:0;}
-  .legend-label{flex:1; color:var(--ink);}
-  .legend-val{font-weight:700; color:var(--navy);}
   .kpi-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px;}
   .navbar{display:flex; gap:8px; padding:12px 28px; background:#fff; border-bottom:1px solid var(--line); flex-wrap:wrap; position:sticky; top:0; z-index:50;}
   .nav-btn{
@@ -186,6 +179,21 @@
     #btnDoPrint, #btnClosePrint{ display:none !important; }
     .doc-header .doc-logo{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
+  .splash-loader{display:flex; gap:10px;}
+  .splash-loader span{
+    width:14px; height:14px; border-radius:5px;
+    background:linear-gradient(135deg,#2E86AB 0%, #7FC8E8 100%);
+    animation: splashSquarePulse 1.1s ease-in-out infinite;
+    box-shadow:0 2px 8px rgba(0,0,0,.25);
+  }
+  .splash-loader span:nth-child(1){ animation-delay:0s; }
+  .splash-loader span:nth-child(2){ animation-delay:.13s; }
+  .splash-loader span:nth-child(3){ animation-delay:.26s; }
+  .splash-loader span:nth-child(4){ animation-delay:.39s; }
+  @keyframes splashSquarePulse{
+    0%, 70%, 100%{ transform:scale(.55) rotate(0deg); opacity:.45; }
+    35%{ transform:scale(1) rotate(90deg); opacity:1; }
+  }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -200,11 +208,11 @@
     </svg>
   </div>
   <div style="color:#fff; font-size:22px; font-weight:700; letter-spacing:.3px; margin-bottom:4px;">AGK Inventory</div>
-  <div style="color:#B9C7D8; font-size:12px; margin-bottom:26px;">Grocery POS &amp; Inventory</div>
-  <div style="width:180px; height:4px; background:rgba(255,255,255,.15); border-radius:4px; overflow:hidden;">
-    <div id="splashProgress" style="width:0%; height:100%; background:#7FC8E8; border-radius:4px; transition:width linear;"></div>
+  <div style="color:#B9C7D8; font-size:12px; margin-bottom:30px;">Grocery POS &amp; Inventory</div>
+  <div class="splash-loader">
+    <span></span><span></span><span></span><span></span>
   </div>
-  <div id="splashStatus" style="color:#8CA0B8; font-size:11px; margin-top:12px;">Loading…</div>
+  <div id="splashStatus" style="color:#8CA0B8; font-size:11px; margin-top:16px;">Loading…</div>
 </div>
 <div id="printOverlay" style="display:none; position:fixed; inset:0; background:rgba(20,30,45,.55); z-index:9999; align-items:center; justify-content:center;">
   <div style="background:#fff; border-radius:12px; max-width:420px; width:92%; max-height:88vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3);">
@@ -352,21 +360,6 @@
           <thead><tr><th></th><th>Code</th><th>Product</th><th class="num">Qty sold</th><th class="num">Revenue</th></tr></thead>
           <tbody id="topSellersBody"></tbody>
         </table>
-      </div>
-
-      <div class="card">
-        <h2>Revenue by category</h2>
-        <div class="chart-wrap">
-          <canvas id="chartCategory" width="150" height="150"></canvas>
-          <div class="legend" id="legendCategory"></div>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Stock status</h2>
-        <div class="chart-wrap">
-          <canvas id="chartStatus" width="150" height="150"></canvas>
-          <div class="legend" id="legendStatus"></div>
-        </div>
       </div>
     </div>
   </div>
@@ -2829,8 +2822,6 @@ var qrcode = function() {
 </script>
 <script>
 const CATEGORIES = ["Food & Grocery","Beverages","Hygiene & Personal Care","Household","Health & Pharmacy","Other / Uncategorised"];
-const CAT_COLORS = { "Food & Grocery":"#2E86AB","Beverages":"#5FA8D3","Hygiene & Personal Care":"#1E8E5A","Household":"#B9791C","Health & Pharmacy":"#C0392B","Other / Uncategorised":"#8C8C8C" };
-const STATUS_COLORS = { "OK":"#1E8E5A","LOW STOCK":"#B9791C","OUT OF STOCK":"#C0392B" };
 
 const SEED_PRODUCTS = [
 ["Sugar","Food & Grocery",86500,5],
@@ -3381,60 +3372,6 @@ function renderKPIs(){
   document.getElementById('kpiTxnToday').textContent = txnToday;
 }
 
-function drawDonut(canvasId, legendId, dataObj, colorMap){
-  const canvas = document.getElementById(canvasId);
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0,0,w,h);
-  const entries = Object.entries(dataObj).filter(([k,v])=>v>0);
-  const total = entries.reduce((s,[,v])=>s+v,0);
-  const cx = w/2, cy = h/2, rOuter = Math.min(w,h)/2 - 4, rInner = rOuter*0.58;
-  if(total<=0){
-    ctx.beginPath(); ctx.arc(cx,cy,rOuter,0,Math.PI*2); ctx.fillStyle="#EEF1F6"; ctx.fill();
-    ctx.font = "12px sans-serif"; ctx.fillStyle="#66707E"; ctx.textAlign="center";
-    ctx.fillText("No data yet", cx, cy+4);
-    document.getElementById(legendId).innerHTML = '<div class="legend-item"><span style="color:#66707E;">Nothing to show yet</span></div>';
-    return;
-  }
-  let start = -Math.PI/2;
-  entries.forEach(([k,v])=>{
-    const slice = (v/total)*Math.PI*2;
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,rOuter,start,start+slice);
-    ctx.closePath();
-    ctx.fillStyle = colorMap[k] || "#8C8C8C";
-    ctx.fill();
-    start += slice;
-  });
-  ctx.beginPath(); ctx.arc(cx,cy,rInner,0,Math.PI*2); ctx.fillStyle="#FFFFFF"; ctx.fill();
-
-  const legend = document.getElementById(legendId);
-  legend.innerHTML = entries.sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
-    const pct = ((v/total)*100).toFixed(0);
-    return `<div class="legend-item">
-      <span class="legend-dot" style="background:${colorMap[k]||'#8C8C8C'}"></span>
-      <span class="legend-label">${k}</span>
-      <span class="legend-val">${pct}%</span>
-    </div>`;
-  }).join('');
-}
-
-function renderCharts(){
-  const revByCat = {};
-  CATEGORIES.forEach(c=>revByCat[c]=0);
-  sales.forEach(s=>{
-    const p = products.find(x=>x.code===s.code);
-    const cat = p ? p.category : "Other / Uncategorised";
-    revByCat[cat] = (revByCat[cat]||0) + s.total;
-  });
-  drawDonut('chartCategory','legendCategory', revByCat, CAT_COLORS);
-
-  const statusCounts = {"OK":0,"LOW STOCK":0,"OUT OF STOCK":0};
-  products.forEach(p=>{ statusCounts[statusFor(p)]++; });
-  drawDonut('chartStatus','legendStatus', statusCounts, STATUS_COLORS);
-}
-
 function renderAll(){
   populateCodeList();
   renderCart();
@@ -3444,7 +3381,6 @@ function renderAll(){
   renderTopSellers();
   renderTransactions();
   renderKPIs();
-  renderCharts();
   updateNavBadges();
   if(document.getElementById('page-categories').classList.contains('active')) renderCategoriesPage();
 }
@@ -4127,14 +4063,6 @@ window.addEventListener('appinstalled', () => {
 // ---------- init ----------
 const SPLASH_DURATION_MS = 15000; // change this one number to adjust how long the splash shows
 
-function animateSplashProgress(durationMs){
-  const bar = document.getElementById('splashProgress');
-  requestAnimationFrame(()=>{
-    bar.style.transitionDuration = durationMs + 'ms';
-    bar.style.width = '100%';
-  });
-}
-
 function hideSplash(){
   const splash = document.getElementById('splashScreen');
   splash.style.opacity = '0';
@@ -4142,7 +4070,6 @@ function hideSplash(){
 }
 
 (async function init(){
-  animateSplashProgress(SPLASH_DURATION_MS);
   const statusEl = document.getElementById('splashStatus');
 
   document.getElementById('dateBadge').textContent = todayStr();
