@@ -122,6 +122,27 @@
   .legend-label{flex:1; color:var(--ink);}
   .legend-val{font-weight:700; color:var(--navy);}
   .kpi-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px;}
+  .navbar{display:flex; gap:8px; padding:12px 28px; background:#fff; border-bottom:1px solid var(--line); flex-wrap:wrap; position:sticky; top:0; z-index:50;}
+  .nav-btn{
+    border:1px solid var(--line); background:#fff; color:var(--ink); padding:9px 16px; border-radius:10px;
+    font-size:13px; font-weight:600; cursor:pointer; transition:.15s; display:flex; align-items:center; gap:6px;
+  }
+  .nav-btn:hover{background:var(--teal-light);}
+  .nav-btn.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .nav-badge{
+    background:rgba(0,0,0,.12); color:inherit; font-size:11px; font-weight:700; padding:1px 7px; border-radius:10px; min-width:18px; text-align:center;
+  }
+  .nav-btn.active .nav-badge{background:rgba(255,255,255,.25);}
+  .page-section{display:none;}
+  .page-section.active{display:block;}
+  .cat-btn-grid{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px;}
+  .cat-btn{
+    border:1px solid var(--line); background:#fff; padding:12px 18px; border-radius:12px; cursor:pointer;
+    font-size:13px; font-weight:600; color:var(--navy); transition:.15s; text-align:left; min-width:150px;
+  }
+  .cat-btn:hover{border-color:var(--teal); background:var(--teal-light);}
+  .cat-btn.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .cat-btn .cat-count{display:block; font-size:11px; font-weight:400; opacity:.75; margin-top:2px;}
   .kpi{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px;}
   .kpi .label{font-size:11px; text-transform:uppercase; color:var(--muted); font-weight:700; letter-spacing:.4px;}
   .kpi .value{font-size:22px; font-weight:800; color:var(--navy); margin-top:4px;}
@@ -219,8 +240,16 @@
   </div>
 </div>
 
+<div class="navbar" id="navbar">
+  <button class="nav-btn active" data-page="dashboard">🏠 Dashboard</button>
+  <button class="nav-btn" data-page="categories">🏷️ Categories</button>
+  <button class="nav-btn" data-page="quotations">📋 Quotations <span class="nav-badge" id="navBadgeQuotes">0</span></button>
+  <button class="nav-btn" data-page="transactions">🧾 Transactions <span class="nav-badge" id="navBadgeTxns">0</span></button>
+  <button class="nav-btn" data-page="products">📦 Products <span class="nav-badge" id="navBadgeProducts">0</span></button>
+</div>
 <div class="wrap">
 
+  <div class="page-section active" id="page-dashboard">
   <div class="kpi-row">
     <div class="kpi"><div class="label">Products low / out of stock</div><div class="value" id="kpiLow">0</div></div>
     <div class="kpi"><div class="label">Total stock value (MWK)</div><div class="value" id="kpiStockValue">0</div></div>
@@ -287,77 +316,6 @@
           <button class="btn btn-ghost" id="btnClearCart">Clear cart</button>
         </div>
       </div>
-
-      <div class="card">
-        <h2>Quotations</h2>
-        <div class="row">
-          <div>
-            <label>Product code</label>
-            <input type="text" id="quoteSearchCode" list="codeList" placeholder="e.g. P001" autocomplete="off">
-          </div>
-          <div>
-            <label>Qty</label>
-            <input type="number" id="quoteSearchQty" min="1" value="1" class="mini-input" style="width:100%;">
-          </div>
-          <button class="btn btn-primary" id="btnAddQuoteLine">Add to quote</button>
-        </div>
-        <table>
-          <thead><tr><th>Code</th><th>Product</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th><th></th></tr></thead>
-          <tbody id="quoteBody"></tbody>
-          <tfoot><tr class="cart-total-row"><td colspan="4">Quote total</td><td class="num" id="quoteTotal">0</td><td></td></tr></tfoot>
-        </table>
-        <div class="row" style="margin-top:12px;">
-          <div>
-            <label>Customer name (optional)</label>
-            <input type="text" id="quoteCustomer" placeholder="Walk-in / customer name">
-          </div>
-          <div>
-            <label>Valid until</label>
-            <input type="date" id="quoteValidUntil">
-          </div>
-        </div>
-        <div class="toolbar" style="margin-top:14px; margin-bottom:0;">
-          <button class="btn btn-save" id="btnGenerateQuote">Generate quotation</button>
-          <button class="btn btn-ghost" id="btnClearQuote">Clear</button>
-        </div>
-
-        <h2 style="margin-top:22px;">Saved quotations</h2>
-        <table>
-          <thead><tr><th>Date</th><th>Quote #</th><th>Customer</th><th class="num">Total</th><th></th></tr></thead>
-          <tbody id="quoteHistBody"></tbody>
-        </table>
-        <div id="quoteHistEmpty" style="display:none; color:#66707E; font-size:13px; padding:10px 2px;">No quotations yet. Build one above and click Generate.</div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" id="toggleTxn">
-          <h2 style="margin:0;">Recent transactions <span id="lastTxnAgo" style="font-size:11px; font-weight:400; color:#66707E; margin-left:8px;"></span></h2>
-          <button class="btn btn-ghost" id="btnToggleTxn" style="padding:6px 14px;">🧾 Show transactions ▾</button>
-        </div>
-        <div id="txnSection" style="display:none; margin-top:14px;">
-        <div class="toolbar" style="margin-bottom:12px;">
-          <div>
-            <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">From</label>
-            <input type="date" id="txnFrom" style="padding:7px 9px; border:1px solid var(--line); border-radius:8px;">
-          </div>
-          <div>
-            <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">To</label>
-            <input type="date" id="txnTo" style="padding:7px 9px; border:1px solid var(--line); border-radius:8px;">
-          </div>
-          <div style="flex:1; min-width:160px;">
-            <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">Product or transaction ID</label>
-            <input type="text" id="txnSearch" placeholder="e.g. Sugar or TXN-2026..." style="width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:8px;">
-          </div>
-          <button class="btn btn-ghost" id="btnTxnToday" style="align-self:flex-end;">Today</button>
-          <button class="btn btn-ghost" id="btnTxnClear" style="align-self:flex-end;">Clear filter</button>
-        </div>
-        <table>
-          <thead><tr><th>Date &amp; time</th><th>Transaction</th><th>Items</th><th class="num">Total</th><th></th></tr></thead>
-          <tbody id="txnBody"></tbody>
-        </table>
-        <div id="txnEmpty" style="display:none; color:#66707E; font-size:13px; padding:10px 2px;">No sales recorded yet. Completed sales will appear here.</div>
-        </div>
-      </div>
     </div>
 
     <!-- RIGHT COLUMN -->
@@ -412,43 +370,128 @@
       </div>
     </div>
   </div>
+  </div> <!-- /page-dashboard -->
 
-  <div class="card">
-    <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" id="toggleProductDb">
-      <h2 style="margin:0;">Product database <span style="font-size:12px; font-weight:400; color:#66707E;">(full list, add / edit / delete)</span></h2>
-      <button class="btn btn-ghost" id="btnToggleProductDb" style="padding:6px 14px;">📦 Manage products ▾</button>
-    </div>
-    <div id="productDbSection" style="display:none; margin-top:14px;">
-    <div class="toolbar">
-      <input type="text" id="productSearch" class="search-box" placeholder="Filter by code, name or category...">
-      <select id="categoryFilter" style="max-width:220px;"><option value="">All categories</option></select>
-      <button class="btn btn-ghost" id="btnExportProducts">⬇ Export products (CSV)</button>
-      <button class="btn btn-ghost" id="btnExportSales">⬇ Export sales log (CSV)</button>
-    </div>
-    <div style="max-height:420px; overflow:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>Code</th><th>Name</th><th>Category</th>
-            <th class="num">Price (MWK)</th><th class="num">Stock</th><th class="num">Reorder at</th>
-            <th class="center">Status</th><th></th>
-          </tr>
-        </thead>
-        <tbody id="productBody"></tbody>
-      </table>
-    </div>
-
-    <h2 style="margin-top:20px;">Add new product</h2>
-    <div class="row add-product-row">
-      <div><label>Name</label><input type="text" id="npName"></div>
-      <div><label>Category</label>
-        <select id="npCategory"></select>
+  <div class="page-section" id="page-categories">
+    <div class="card">
+      <h2>Browse by category</h2>
+      <div class="cat-btn-grid" id="catButtonGrid"></div>
+      <div id="catProductsWrap" style="display:none;">
+        <div class="toolbar">
+          <h2 style="margin:0;" id="catProductsTitle">Category</h2>
+          <button class="btn btn-ghost" id="btnCatBack">← All categories</button>
+        </div>
+        <table>
+          <thead><tr><th>Code</th><th>Name</th><th class="num">Price</th><th class="num">Stock</th><th class="num">Qty</th><th></th></tr></thead>
+          <tbody id="catProductsBody"></tbody>
+        </table>
       </div>
-      <div><label>Price (MWK)</label><input type="number" id="npPrice" min="0"></div>
-      <div><label>Opening stock</label><input type="number" id="npStock" min="0" value="0"></div>
-      <div><label>Reorder at</label><input type="number" id="npReorder" min="0" value="5"></div>
-      <button class="btn btn-primary" id="btnAddProduct">Add product</button>
     </div>
+  </div>
+
+  <div class="page-section" id="page-quotations">
+    <div class="card">
+      <h2>Quotations</h2>
+      <div class="row">
+        <div>
+          <label>Product code</label>
+          <input type="text" id="quoteSearchCode" list="codeList" placeholder="e.g. P001" autocomplete="off">
+        </div>
+        <div>
+          <label>Qty</label>
+          <input type="number" id="quoteSearchQty" min="1" value="1" class="mini-input" style="width:100%;">
+        </div>
+        <button class="btn btn-primary" id="btnAddQuoteLine">Add to quote</button>
+      </div>
+      <table>
+        <thead><tr><th>Code</th><th>Product</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th><th></th></tr></thead>
+        <tbody id="quoteBody"></tbody>
+        <tfoot><tr class="cart-total-row"><td colspan="4">Quote total</td><td class="num" id="quoteTotal">0</td><td></td></tr></tfoot>
+      </table>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label>Customer name (optional)</label>
+          <input type="text" id="quoteCustomer" placeholder="Walk-in / customer name">
+        </div>
+        <div>
+          <label>Valid until</label>
+          <input type="date" id="quoteValidUntil">
+        </div>
+      </div>
+      <div class="toolbar" style="margin-top:14px; margin-bottom:0;">
+        <button class="btn btn-save" id="btnGenerateQuote">Generate quotation</button>
+        <button class="btn btn-ghost" id="btnClearQuote">Clear</button>
+      </div>
+
+      <h2 style="margin-top:22px;">Saved quotations</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Quote #</th><th>Customer</th><th class="num">Total</th><th></th></tr></thead>
+        <tbody id="quoteHistBody"></tbody>
+      </table>
+      <div id="quoteHistEmpty" style="display:none; color:#66707E; font-size:13px; padding:10px 2px;">No quotations yet. Build one above and click Generate.</div>
+    </div>
+  </div>
+
+  <div class="page-section" id="page-transactions">
+    <div class="card">
+      <h2>Recent transactions <span id="lastTxnAgo" style="font-size:11px; font-weight:400; color:#66707E; margin-left:8px;"></span></h2>
+      <div class="toolbar" style="margin-bottom:12px;">
+        <div>
+          <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">From</label>
+          <input type="date" id="txnFrom" style="padding:7px 9px; border:1px solid var(--line); border-radius:8px;">
+        </div>
+        <div>
+          <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">To</label>
+          <input type="date" id="txnTo" style="padding:7px 9px; border:1px solid var(--line); border-radius:8px;">
+        </div>
+        <div style="flex:1; min-width:160px;">
+          <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">Product or transaction ID</label>
+          <input type="text" id="txnSearch" placeholder="e.g. Sugar or TXN-2026..." style="width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:8px;">
+        </div>
+        <button class="btn btn-ghost" id="btnTxnToday" style="align-self:flex-end;">Today</button>
+        <button class="btn btn-ghost" id="btnTxnClear" style="align-self:flex-end;">Clear filter</button>
+      </div>
+      <table>
+        <thead><tr><th>Date &amp; time</th><th>Transaction</th><th>Items</th><th class="num">Total</th><th></th></tr></thead>
+        <tbody id="txnBody"></tbody>
+      </table>
+      <div id="txnEmpty" style="display:none; color:#66707E; font-size:13px; padding:10px 2px;">No sales recorded yet. Completed sales will appear here.</div>
+    </div>
+  </div>
+
+  <div class="page-section" id="page-products">
+    <div class="card">
+      <h2>Product database <span style="font-size:12px; font-weight:400; color:#66707E;">(full list, add / edit / delete)</span></h2>
+      <div class="toolbar">
+        <input type="text" id="productSearch" class="search-box" placeholder="Filter by code, name or category...">
+        <select id="categoryFilter" style="max-width:220px;"><option value="">All categories</option></select>
+        <button class="btn btn-ghost" id="btnExportProducts">⬇ Export products (CSV)</button>
+        <button class="btn btn-ghost" id="btnExportSales">⬇ Export sales log (CSV)</button>
+      </div>
+      <div style="max-height:420px; overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th><th>Name</th><th>Category</th>
+              <th class="num">Price (MWK)</th><th class="num">Stock</th><th class="num">Reorder at</th>
+              <th class="center">Status</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="productBody"></tbody>
+        </table>
+      </div>
+
+      <h2 style="margin-top:20px;">Add new product</h2>
+      <div class="row add-product-row">
+        <div><label>Name</label><input type="text" id="npName"></div>
+        <div><label>Category</label>
+          <select id="npCategory"></select>
+        </div>
+        <div><label>Price (MWK)</label><input type="number" id="npPrice" min="0"></div>
+        <div><label>Opening stock</label><input type="number" id="npStock" min="0" value="0"></div>
+        <div><label>Reorder at</label><input type="number" id="npReorder" min="0" value="5"></div>
+        <button class="btn btn-primary" id="btnAddProduct">Add product</button>
+      </div>
     </div>
   </div>
 
@@ -3402,6 +3445,8 @@ function renderAll(){
   renderTransactions();
   renderKPIs();
   renderCharts();
+  updateNavBadges();
+  if(document.getElementById('page-categories').classList.contains('active')) renderCategoriesPage();
 }
 
 // ---------- Manager passcode (protects Delete product & Void transaction) ----------
@@ -3502,25 +3547,83 @@ document.getElementById('btnClearCart').addEventListener('click', ()=>{
   }
 });
 
-document.getElementById('toggleTxn').addEventListener('click', toggleTxnSection);
-document.getElementById('btnToggleTxn').addEventListener('click', (e)=>{ e.stopPropagation(); toggleTxnSection(); });
-function toggleTxnSection(){
-  const section = document.getElementById('txnSection');
-  const btn = document.getElementById('btnToggleTxn');
-  const isHidden = section.style.display === 'none';
-  section.style.display = isHidden ? 'block' : 'none';
-  btn.textContent = isHidden ? '🧾 Hide transactions ▴' : '🧾 Show transactions ▾';
+// ---------- Page navigation (top nav bar) ----------
+function showPage(pageId){
+  document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  const btn = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
+  if(page) page.classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(pageId === 'categories') renderCategoriesPage();
+}
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> showPage(btn.dataset.page));
+});
+
+function updateNavBadges(){
+  document.getElementById('navBadgeProducts').textContent = products.length;
+  document.getElementById('navBadgeTxns').textContent = new Set(sales.map(s=>s.txnId||s.id)).size;
+  document.getElementById('navBadgeQuotes').textContent = quotations.length;
 }
 
-document.getElementById('toggleProductDb').addEventListener('click', toggleProductDbSection);
-document.getElementById('btnToggleProductDb').addEventListener('click', (e)=>{ e.stopPropagation(); toggleProductDbSection(); });
-function toggleProductDbSection(){
-  const section = document.getElementById('productDbSection');
-  const btn = document.getElementById('btnToggleProductDb');
-  const isHidden = section.style.display === 'none';
-  section.style.display = isHidden ? 'block' : 'none';
-  btn.textContent = isHidden ? '📦 Hide products ▴' : '📦 Manage products ▾';
+// ---------- Categories page ----------
+let activeCatFilter = null;
+
+function renderCategoriesPage(){
+  const grid = document.getElementById('catButtonGrid');
+  const cats = [...new Set(products.map(p=>p.category).filter(Boolean))].sort();
+  grid.innerHTML = cats.map(cat=>{
+    const count = products.filter(p=>p.category===cat).length;
+    const isActive = cat === activeCatFilter;
+    return `<button class="cat-btn ${isActive?'active':''}" data-cat="${cat}">${cat}<span class="cat-count">${count} product${count!==1?'s':''}</span></button>`;
+  }).join('');
+  grid.querySelectorAll('.cat-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> openCategoryProducts(btn.dataset.cat));
+  });
+  if(activeCatFilter) renderCategoryProductList(activeCatFilter);
 }
+
+function openCategoryProducts(cat){
+  activeCatFilter = cat;
+  document.getElementById('catProductsWrap').style.display = 'block';
+  document.getElementById('catProductsTitle').textContent = cat;
+  renderCategoriesPage();
+  renderCategoryProductList(cat);
+}
+
+function renderCategoryProductList(cat){
+  const tbody = document.getElementById('catProductsBody');
+  const list = products.filter(p=>p.category===cat);
+  tbody.innerHTML = list.map(p=>`
+    <tr>
+      <td class="code-tag">${p.code}</td>
+      <td>${p.name}</td>
+      <td class="num">${fmtMWK(p.price)}</td>
+      <td class="num">${p.stock}</td>
+      <td class="num"><input type="number" min="1" value="1" class="mini-input" style="width:60px;" id="catQty_${p.code}"></td>
+      <td class="center"><button class="btn btn-primary btn-sm" data-code="${p.code}">Add to cart</button></td>
+    </tr>`).join('');
+  tbody.querySelectorAll('button[data-code]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const code = btn.dataset.code;
+      const qtyField = document.getElementById('catQty_'+code);
+      const qty = parseInt(qtyField.value,10) || 1;
+      const existing = cart.find(c=>c.code===code);
+      if(existing) existing.qty += qty;
+      else cart.push({code, qty});
+      renderCart();
+      const p = products.find(x=>x.code===code);
+      showToast(`Added ${qty} × ${p.name} to cart`);
+    });
+  });
+}
+
+document.getElementById('btnCatBack').addEventListener('click', ()=>{
+  activeCatFilter = null;
+  document.getElementById('catProductsWrap').style.display = 'none';
+  renderCategoriesPage();
+});
 
 function qsLookup(){
   const code = document.getElementById('qsCode').value.trim().toUpperCase();

@@ -42,12 +42,24 @@ better-looking layout (roughly a compact A5-style card, ~420px)
 instead of the narrow 80mm thermal-receipt width tried earlier. They
 still print on a single page with no extra blank pages.
 
-RECENT TRANSACTIONS (now collapsible)
-Like the Product Database, Recent Transactions is now hidden by
-default behind a "🧾 Show transactions" button, to keep the main
-screen shorter. The "last sale X min ago" note stays visible in the
-header even when collapsed, so you always have a quick glance without
-expanding it.
+TOP NAVIGATION (replaces the old collapsible sections)
+The app is now organized into proper pages with a navigation bar
+under the header:
+  🏠 Dashboard — search, cart, quick stock update, KPIs, top sellers,
+     charts. This is what opens by default.
+  🏷️ Categories — buttons for each product category; click one to
+     see just that category's products and add them straight to the
+     cart from there.
+  📋 Quotations — build and manage price quotes.
+  🧾 Transactions — search and filter your sales history, print or
+     void past sales.
+  📦 Products — the full product database: add, edit, delete, export.
+
+Each nav button (except Dashboard) shows a small live count badge, so
+you can see at a glance how many products, transactions, or
+quotations exist without opening the page. Only one page shows at a
+time, which is what keeps the screen short and focused now instead of
+one long scroll.
 
 LOADING SPLASH SCREEN
 When you open the app, a branded loading screen (logo, "AGK
@@ -79,18 +91,12 @@ Transfer, or Card). For Cash, enter the amount received and the
 change due calculates and displays live, then prints on the receipt
 automatically.
 
-LAYOUT CHANGES
-The full Product Database (add/edit/delete every product) is now
-tucked behind a "📦 Manage products" button near the bottom of the
-page, collapsed by default, to keep the main screen shorter.
-
-For quick day-to-day stock adjustments without opening the full
-database, use the new "Quick stock update" box (top of the right
-column): type a product code, see its current stock, set a new
-number (or use the +10 / -10 buttons), and save.
-
-Top 5 best sellers and the two charts have moved to the right-hand
-column alongside the new stock widget, balancing the two columns.
+DASHBOARD LAYOUT
+The Dashboard page has two columns: search, cart, and checkout on the
+left; Quick Stock Update, Top 5 Best Sellers, and the two charts on
+the right. Use "Quick stock update" for fast day-to-day adjustments
+(type a code, set a new number or use +10/-10, save) without needing
+to open the full Products page.
 
 PRINTING
 Receipts and quotations now print cleanly on a single page, with
@@ -102,8 +108,8 @@ itself is still called AGK Inventory.
 RECEIPTS & QUOTATIONS
 Every completed sale automatically opens a printable receipt (with a
 QR code encoding the transaction ID, date, and total). You can also
-reprint any past sale's receipt from the "Receipt" button in Recent
-Transactions.
+reprint any past sale's receipt from the "Receipt" button on the
+Transactions page.
 
 The Quotations section lets you build a price quote for a customer
 (search products, set quantities, optional customer name and valid
