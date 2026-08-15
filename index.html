@@ -151,7 +151,7 @@
   .doc-qr{text-align:center; margin:16px 0 8px;}
   .doc-footer{text-align:center; font-size:11px; color:var(--muted); margin-top:10px;}
   @media print{
-    @page{ size:80mm auto; margin:4mm; }
+    @page{ size:auto; margin:12mm; }
     html, body{ height:auto !important; margin:0 !important; padding:0 !important; }
     body > *:not(#printOverlay){ display:none !important; }
     #printOverlay{
@@ -159,22 +159,32 @@
     }
     #printOverlay > div{
       background:#fff !important; box-shadow:none !important; border-radius:0 !important;
-      max-width:80mm !important; width:80mm !important; max-height:none !important; overflow:visible !important; margin:0 auto !important;
+      max-width:420px !important; width:100% !important; max-height:none !important; overflow:visible !important; margin:0 auto !important;
     }
-    #printArea{ padding:2mm 1mm !important; }
+    #printArea{ padding:6mm !important; }
     #btnDoPrint, #btnClosePrint{ display:none !important; }
-    .doc-table{ font-size:10px; }
-    .doc-header h3{ font-size:14px; }
-    .doc-header .doc-sub{ font-size:10px; }
-    .doc-header .doc-contact{ font-size:9px; }
-    .doc-meta{ font-size:10px; }
-    .doc-footer{ font-size:9px; }
     .doc-header .doc-logo{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+<div id="splashScreen" style="position:fixed; inset:0; z-index:99999; background:linear-gradient(135deg,#16324F 0%, #1F3A5F 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity .5s ease;">
+  <div style="width:72px; height:72px; border-radius:18px; background:linear-gradient(135deg,#2E86AB 0%, #7FC8E8 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(0,0,0,.3); margin-bottom:18px;">
+    <svg width="40" height="40" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13 2 L23 9 H3 Z" fill="#FFFFFF"/>
+      <rect x="6" y="12" width="3.4" height="9" rx="0.6" fill="#FFFFFF" fill-opacity="0.55"/>
+      <rect x="11.3" y="9" width="3.4" height="12" rx="0.6" fill="#FFFFFF" fill-opacity="0.78"/>
+      <rect x="16.6" y="6" width="3.4" height="15" rx="0.6" fill="#FFFFFF"/>
+    </svg>
+  </div>
+  <div style="color:#fff; font-size:22px; font-weight:700; letter-spacing:.3px; margin-bottom:4px;">AGK Inventory</div>
+  <div style="color:#B9C7D8; font-size:12px; margin-bottom:26px;">Grocery POS &amp; Inventory</div>
+  <div style="width:180px; height:4px; background:rgba(255,255,255,.15); border-radius:4px; overflow:hidden;">
+    <div id="splashProgress" style="width:0%; height:100%; background:#7FC8E8; border-radius:4px; transition:width linear;"></div>
+  </div>
+  <div id="splashStatus" style="color:#8CA0B8; font-size:11px; margin-top:12px;">Loading…</div>
+</div>
 <div id="printOverlay" style="display:none; position:fixed; inset:0; background:rgba(20,30,45,.55); z-index:9999; align-items:center; justify-content:center;">
   <div style="background:#fff; border-radius:12px; max-width:420px; width:92%; max-height:88vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3);">
     <div id="printArea" style="padding:26px;"></div>
@@ -320,7 +330,11 @@
       </div>
 
       <div class="card">
-        <h2>Recent transactions <span id="lastTxnAgo" style="font-size:11px; font-weight:400; color:#66707E; margin-left:8px;"></span></h2>
+        <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" id="toggleTxn">
+          <h2 style="margin:0;">Recent transactions <span id="lastTxnAgo" style="font-size:11px; font-weight:400; color:#66707E; margin-left:8px;"></span></h2>
+          <button class="btn btn-ghost" id="btnToggleTxn" style="padding:6px 14px;">🧾 Show transactions ▾</button>
+        </div>
+        <div id="txnSection" style="display:none; margin-top:14px;">
         <div class="toolbar" style="margin-bottom:12px;">
           <div>
             <label style="font-size:11px; color:#66707E; display:block; margin-bottom:3px;">From</label>
@@ -342,6 +356,7 @@
           <tbody id="txnBody"></tbody>
         </table>
         <div id="txnEmpty" style="display:none; color:#66707E; font-size:13px; padding:10px 2px;">No sales recorded yet. Completed sales will appear here.</div>
+        </div>
       </div>
     </div>
 
@@ -3281,7 +3296,7 @@ function openReceipt(txnId){
       <tfoot><tr class="doc-total-row"><td colspan="3">TOTAL (MWK)</td><td class="num">${fmtMWK(total)}</td></tr></tfoot>
     </table>
     ${paymentLines}
-    <div class="doc-qr">${qrSvg(qrPayload, 100)}</div>
+    <div class="doc-qr">${qrSvg(qrPayload, 110)}</div>
     <div class="doc-footer">Thank you for shopping with Heritage Traders</div>
   `;
   openPrintOverlay(html, `Receipt ${txnId}`);
@@ -3487,6 +3502,16 @@ document.getElementById('btnClearCart').addEventListener('click', ()=>{
   }
 });
 
+document.getElementById('toggleTxn').addEventListener('click', toggleTxnSection);
+document.getElementById('btnToggleTxn').addEventListener('click', (e)=>{ e.stopPropagation(); toggleTxnSection(); });
+function toggleTxnSection(){
+  const section = document.getElementById('txnSection');
+  const btn = document.getElementById('btnToggleTxn');
+  const isHidden = section.style.display === 'none';
+  section.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? '🧾 Hide transactions ▴' : '🧾 Show transactions ▾';
+}
+
 document.getElementById('toggleProductDb').addEventListener('click', toggleProductDbSection);
 document.getElementById('btnToggleProductDb').addEventListener('click', (e)=>{ e.stopPropagation(); toggleProductDbSection(); });
 function toggleProductDbSection(){
@@ -3620,7 +3645,7 @@ window.openQuotePrint = function(quoteId){
       <tbody>${rowsHtml}</tbody>
       <tfoot><tr class="doc-total-row"><td colspan="3">TOTAL (MWK)</td><td class="num">${fmtMWK(q.total)}</td></tr></tfoot>
     </table>
-    <div class="doc-qr">${qrSvg(qrPayload, 100)}</div>
+    <div class="doc-qr">${qrSvg(qrPayload, 110)}</div>
     <div class="doc-footer">This quotation is an estimate and does not reserve stock until converted to a sale.</div>
   `;
   openPrintOverlay(html, `Quotation ${q.quoteNo}`);
@@ -3997,12 +4022,39 @@ window.addEventListener('appinstalled', () => {
 });
 
 // ---------- init ----------
+const SPLASH_DURATION_MS = 15000; // change this one number to adjust how long the splash shows
+
+function animateSplashProgress(durationMs){
+  const bar = document.getElementById('splashProgress');
+  requestAnimationFrame(()=>{
+    bar.style.transitionDuration = durationMs + 'ms';
+    bar.style.width = '100%';
+  });
+}
+
+function hideSplash(){
+  const splash = document.getElementById('splashScreen');
+  splash.style.opacity = '0';
+  setTimeout(()=>{ splash.style.display = 'none'; }, 500);
+}
+
 (async function init(){
+  animateSplashProgress(SPLASH_DURATION_MS);
+  const statusEl = document.getElementById('splashStatus');
+
   document.getElementById('dateBadge').textContent = todayStr();
   populateCategorySelects();
   updateCashFieldsVisibility();
+
+  const minDisplay = new Promise(res => setTimeout(res, SPLASH_DURATION_MS));
+
+  statusEl.textContent = 'Loading your data…';
   await loadData();
   renderAll();
+  statusEl.textContent = 'Ready';
+
+  await minDisplay; // keep the branded splash up for the full duration even if data loads faster
+  hideSplash();
 
   // Live clock + auto-refresh "time ago" labels every 30s, and KPIs at midnight rollover
   setInterval(()=>{

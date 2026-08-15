@@ -36,13 +36,30 @@ OPTION 3: Company/local network hosting
   just upload this folder there and open the URL from any device on
   that network, same install steps as Option 1.
 
-RECEIPT SIZE & BRANDING
-Receipts and quotations now print at a compact 80mm width (the
-standard thermal receipt roll size), not A4 — a proper narrow slip
-rather than a mostly-empty full sheet. If you print on regular paper
-instead of a thermal roll, it will appear as a narrow strip centered
-on the page, which is normal and expected.
+RECEIPT SIZE (reverted)
+Based on feedback, receipts and quotations are back to the wider,
+better-looking layout (roughly a compact A5-style card, ~420px)
+instead of the narrow 80mm thermal-receipt width tried earlier. They
+still print on a single page with no extra blank pages.
 
+RECENT TRANSACTIONS (now collapsible)
+Like the Product Database, Recent Transactions is now hidden by
+default behind a "🧾 Show transactions" button, to keep the main
+screen shorter. The "last sale X min ago" note stays visible in the
+header even when collapsed, so you always have a quick glance without
+expanding it.
+
+LOADING SPLASH SCREEN
+When you open the app, a branded loading screen (logo, "AGK
+Inventory", progress bar) shows for about 15 seconds before revealing
+the dashboard. Your data is actually loaded well before that in the
+background, so the delay is purely presentational branding, not a
+technical wait. If 15 seconds feels too long day-to-day, this is a
+single number in the code (SPLASH_DURATION_MS near the very end of
+index.html) that's easy to shorten, just say the word and I'll adjust
+it.
+
+RECEIPT & QUOTATION BRANDING
 Each printout shows Heritage Traders (HT) with the logo, contact
 details, and: a receipt number, date and time, itemized lines, total,
 item count, payment method, amount received and change due (for cash
